@@ -1,13 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  // IMPORTANT: This file is gitignored - it won't be committed to GitHub
+  // Replace these with your actual Supabase credentials
+  
+  static const String supabaseUrl = 'https://wcushctxrejdgbvqeiyw.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdXNoY3R4cmVqZGdidnFlaXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NzgxOTgsImV4cCI6MjA4MjU1NDE5OH0.n_t5mGqInOY1HV9OsCS4yi7cQnMXtytG-BVFmCGucyM';
   
   static Future<void> initialize() async {
     await Supabase.initialize(
-      url:'https://zvtlmgipexhhtuvnvkey.supabase.co',
-      anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2dGxtZ2lwZXhoaHR1dm52a2V5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NDc0NjAsImV4cCI6MjA4MjQyMzQ2MH0.Db24ZzBNawSqMvxObeK9Ah4LrHvu4q4-RvybcPpLnWQ',
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
     );
   }
   

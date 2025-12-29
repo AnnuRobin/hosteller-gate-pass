@@ -1,24 +1,21 @@
-class ClassModel {
+class DepartmentModel {
   final String id;
   final String name;
-  final String departmentId;
-  final String? advisorId;
+  final String? hodId;
   final DateTime createdAt;
   
-  ClassModel({
+  DepartmentModel({
     required this.id,
     required this.name,
-    required this.departmentId,
-    this.advisorId,
+    this.hodId,
     required this.createdAt,
   });
   
-  factory ClassModel.fromJson(Map<String, dynamic> json) {
-    return ClassModel(
+  factory DepartmentModel.fromJson(Map<String, dynamic> json) {
+    return DepartmentModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      departmentId: json['department_id'] as String,
-      advisorId: json['advisor_id'] as String?,
+      hodId: json['hod_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -27,8 +24,7 @@ class ClassModel {
     return {
       'id': id,
       'name': name,
-      'department_id': departmentId,
-      'advisor_id': advisorId,
+      'hod_id': hodId,
       'created_at': createdAt.toIso8601String(),
     };
   }

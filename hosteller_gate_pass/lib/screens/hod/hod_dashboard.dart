@@ -13,7 +13,8 @@ class HodDashboard extends StatefulWidget {
   State<HodDashboard> createState() => _HodDashboardState();
 }
 
-class _HodDashboardState extends State<HodDashboard> with SingleTickerProviderStateMixin {
+class _HodDashboardState extends State<HodDashboard>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -25,10 +26,12 @@ class _HodDashboardState extends State<HodDashboard> with SingleTickerProviderSt
 
   Future<void> _loadData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final gatePassProvider = Provider.of<GatePassProvider>(context, listen: false);
-    
+    final gatePassProvider =
+        Provider.of<GatePassProvider>(context, listen: false);
+
     if (authProvider.userProfile?.departmentId != null) {
-      await gatePassProvider.loadHodRequests(authProvider.userProfile!.departmentId!);
+      await gatePassProvider
+          .loadHodRequests(authProvider.userProfile!.departmentId!);
     }
   }
 
@@ -74,7 +77,10 @@ class _HodDashboardState extends State<HodDashboard> with SingleTickerProviderSt
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
+                colors: [
+                  AppConstants.primaryColor,
+                  AppConstants.secondaryColor
+                ],
               ),
             ),
             child: Column(
@@ -163,4 +169,3 @@ class _HodDashboardState extends State<HodDashboard> with SingleTickerProviderSt
     super.dispose();
   }
 }
-

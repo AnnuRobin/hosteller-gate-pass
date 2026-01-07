@@ -5,6 +5,9 @@ import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/request_card.dart';
 import 'review_request_screen.dart';
+import 'manage_students_screen.dart';
+import 'add_student_screen.dart';
+import 'bulk_upload_students_screen.dart';
 
 class AdvisorDashboard extends StatefulWidget {
   const AdvisorDashboard({Key? key}) : super(key: key);
@@ -13,10 +16,13 @@ class AdvisorDashboard extends StatefulWidget {
   State<AdvisorDashboard> createState() => _AdvisorDashboardState();
 }
 
-class _AdvisorDashboardState extends State<AdvisorDashboard> {
+class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadData();
   }
 
@@ -37,6 +43,8 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     final pendingRequests = gatePassProvider.requests
         .where((r) => r.advisorStatus == 'pending')
         .toList();
+    
+    final allRequests = gatePassProvider.requests;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,6 +57,14 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
             },
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          tabs: const [
+            Tab(text: 'Pending Requests'),
+            Tab(text: 'All Requests'),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -79,34 +95,121 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
               ],
             ),
           ),
+          
+          // Quick Actions
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ManageStudentsScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.people),
+                    label: const Text('Manage Students'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AddStudentScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.person_add),
+                    label: const Text('Add Student'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.secondaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
           Expanded(
             child: gatePassProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : pendingRequests.isEmpty
-                    ? const Center(child: Text('No pending requests'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: pendingRequests.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ReviewRequestScreen(
-                                    request: pendingRequests[index],
-                                    isAdvisor: true,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: RequestCard(request: pendingRequests[index]),
-                          );
-                        },
-                      ),
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildRequestList(pendingRequests, true),
+                      _buildRequestList(allRequests, false),
+                    ],
+                  ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BulkUploadStudentsScreen()),
+          );
+        },
+        icon: const Icon(Icons.upload_file),
+        label: const Text('Bulk Upload'),
+        backgroundColor: AppConstants.successColor,
+      ),
     );
+  }
+
+  Widget _buildRequestList(List requests, bool isPending) {
+    if (requests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              isPending ? 'No pending requests' : 'No requests found',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: requests.length,
+        itemBuilder: (context, index) {
+          final request = requests[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ReviewRequestScreen(
+                    request: request,
+                    isAdvisor: true,
+                  ),
+                ),
+              );
+            },
+            child: RequestCard(request: request),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 }

@@ -67,16 +67,14 @@ class GatePassModel {
       hodStatus: json['hod_status'] as String? ?? 'pending',
       parentNotified: json['parent_notified'] as bool? ?? false,
       advisorId: json['advisor_id'] as String?,
-      advisorApprovedAt:
-          json['advisor_approved_at'] != null
-              ? DateTime.parse(json['advisor_approved_at'] as String)
-              : null,
+      advisorApprovedAt: json['advisor_approved_at'] != null
+          ? DateTime.parse(json['advisor_approved_at'] as String)
+          : null,
       advisorRemarks: json['advisor_remarks'] as String?,
       hodId: json['hod_id'] as String?,
-      hodApprovedAt:
-          json['hod_approved_at'] != null
-              ? DateTime.parse(json['hod_approved_at'] as String)
-              : null,
+      hodApprovedAt: json['hod_approved_at'] != null
+          ? DateTime.parse(json['hod_approved_at'] as String)
+          : null,
       hodRemarks: json['hod_remarks'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),

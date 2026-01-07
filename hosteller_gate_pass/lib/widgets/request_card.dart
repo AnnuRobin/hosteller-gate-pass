@@ -77,10 +77,14 @@ class _RequestCardState extends State<RequestCard> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildInfoRow(Icons.class_, widget.request.className ?? widget.request.classId),
+                    child: _buildInfoRow(Icons.class_,
+                        widget.request.className ?? widget.request.classId),
                   ),
                   Expanded(
-                    child: _buildInfoRow(Icons.domain, widget.request.departmentName ?? widget.request.departmentId),
+                    child: _buildInfoRow(
+                        Icons.domain,
+                        widget.request.departmentName ??
+                            widget.request.departmentId),
                   ),
                 ],
               ),
@@ -461,9 +465,12 @@ class _RequestCardState extends State<RequestCard> {
                     const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
-              _buildDetailRow('Student Name', widget.request.studentName ?? 'N/A'),
-              _buildDetailRow('Class', widget.request.className ?? widget.request.classId),
-              _buildDetailRow('Department', widget.request.departmentName ?? widget.request.departmentId),
+              _buildDetailRow(
+                  'Student Name', widget.request.studentName ?? 'N/A'),
+              _buildDetailRow(
+                  'Class', widget.request.className ?? widget.request.classId),
+              _buildDetailRow('Department',
+                  widget.request.departmentName ?? widget.request.departmentId),
               const SizedBox(height: 12),
               _buildDetailRow('Reason', widget.request.reason),
               _buildDetailRow('Destination', widget.request.destination),

@@ -16,7 +16,8 @@ class AdvisorDashboard extends StatefulWidget {
   State<AdvisorDashboard> createState() => _AdvisorDashboardState();
 }
 
-class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerProviderStateMixin {
+class _AdvisorDashboardState extends State<AdvisorDashboard>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -28,10 +29,14 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
 
   Future<void> _loadData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final gatePassProvider = Provider.of<GatePassProvider>(context, listen: false);
-    
+    final gatePassProvider =
+        Provider.of<GatePassProvider>(context, listen: false);
+
     if (authProvider.userProfile?.classId != null) {
-      await gatePassProvider.loadAdvisorRequests(authProvider.userProfile!.classId!);
+      await gatePassProvider.loadAdvisorRequests(
+        classId: authProvider.userProfile!.classId!,
+        departmentId: authProvider.userProfile!.departmentId!,
+      );
     }
   }
 
@@ -43,7 +48,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
     final pendingRequests = gatePassProvider.requests
         .where((r) => r.advisorStatus == 'pending')
         .toList();
-    
+
     final allRequests = gatePassProvider.requests;
 
     return Scaffold(
@@ -73,7 +78,10 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
+                colors: [
+                  AppConstants.primaryColor,
+                  AppConstants.secondaryColor
+                ],
               ),
             ),
             child: Column(
@@ -95,7 +103,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
               ],
             ),
           ),
-          
+
           // Quick Actions
           Padding(
             padding: const EdgeInsets.all(16),
@@ -106,7 +114,8 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ManageStudentsScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const ManageStudentsScreen()),
                       );
                     },
                     icon: const Icon(Icons.people),
@@ -122,7 +131,8 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AddStudentScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const AddStudentScreen()),
                       );
                     },
                     icon: const Icon(Icons.person_add),
@@ -136,7 +146,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> with SingleTickerPr
               ],
             ),
           ),
-          
+
           Expanded(
             child: gatePassProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())

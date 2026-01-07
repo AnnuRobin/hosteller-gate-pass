@@ -39,20 +39,31 @@ class GatePassProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  Future<void> loadAdvisorRequests(String classId) async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      _requests = await _service.getAdvisorRequests(classId);
-      _setupRealtimeSubscription(classId: classId);
-    } catch (e) {
-      print('Error loading requests: $e');
-    }
-    
-    _isLoading = false;
-    notifyListeners();
+ Future<void> loadAdvisorRequests({
+  required String classId,
+  required String departmentId,
+}) async {
+  _isLoading = true;
+  notifyListeners();
+
+  try {
+    _requests = await _service.getAdvisorRequests(
+      classId: classId,
+      departmentId: departmentId,
+    );
+
+    _setupRealtimeSubscription(
+      classId: classId,
+      departmentId: departmentId,
+    );
+  } catch (e) {
+    debugPrint('Error loading advisor requests: $e');
   }
+
+  _isLoading = false;
+  notifyListeners();
+}
+
   
   Future<void> loadHodRequests(String departmentId) async {
     _isLoading = true;

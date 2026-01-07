@@ -55,17 +55,22 @@ class GatePassService {
   }
   
   // Get requests for advisor (by class)
-  Future<List<GatePassModel>> getAdvisorRequests(String classId) async {
-    final response = await _supabase
-        .from('gate_pass_requests')
-        .select()
-        .eq('class_id', classId)
-        .order('created_at', ascending: false);
-    
-    return (response as List)
-        .map((json) => GatePassModel.fromJson(json))
-        .toList();
-  }
+  Future<List<GatePassModel>> getAdvisorRequests({
+  required String classId,
+  required String departmentId,
+}) async {
+  final response = await Supabase.instance.client
+      .from('gate_pass_requests')
+      .select()
+      .eq('class_id', classId)
+      .eq('department_id', departmentId)
+      .order('created_at', ascending: false);
+
+  return response
+      .map<GatePassModel>((json) => GatePassModel.fromJson(json))
+      .toList();
+}
+
   
   // Get requests for HOD (by department)
   Future<List<GatePassModel>> getHodRequests(String departmentId) async {

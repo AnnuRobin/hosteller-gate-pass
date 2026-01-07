@@ -7,10 +7,26 @@ import '../providers/auth_provider.dart';
 import '../providers/gate_pass_provider.dart';
 import '../screens/student/edit_request_screen.dart';
 
-class RequestCard extends StatelessWidget {
+class RequestCard extends StatefulWidget {
   final GatePassModel request;
+  final bool isAdvisor;
+  final bool isHod;
+  final VoidCallback? onActionComplete;
 
-  const RequestCard({Key? key, required this.request}) : super(key: key);
+  const RequestCard({
+    Key? key,
+    required this.request,
+    this.isAdvisor = false,
+    this.isHod = false,
+    this.onActionComplete,
+  }) : super(key: key);
+
+  @override
+  State<RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends State<RequestCard> {
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -30,56 +46,281 @@ class RequestCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      request.reason,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.request.studentName ?? 'Student',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.request.reason,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                  _buildStatusBadge(request.status),
+                  _buildStatusBadge(widget.request.status),
                 ],
               ),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.location_on, request.destination),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoRow(Icons.class_, widget.request.className ?? widget.request.classId),
+                  ),
+                  Expanded(
+                    child: _buildInfoRow(Icons.domain, widget.request.departmentName ?? widget.request.departmentId),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              _buildInfoRow(Icons.location_on, widget.request.destination),
               const SizedBox(height: 4),
               _buildInfoRow(
                 Icons.calendar_today,
-                '${DateFormat('MMM dd').format(request.fromDate)} - ${DateFormat('MMM dd').format(request.toDate)}',
+                '${DateFormat('MMM dd').format(widget.request.fromDate)} - ${DateFormat('MMM dd').format(widget.request.toDate)}',
               ),
               const SizedBox(height: 12),
-              _buildApprovalProgress(request),
-              if (request.status == 'pending')
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditRequestScreen(request: request),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _confirmDelete(context),
-                      icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                      label: const Text('Delete', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
+              _buildApprovalProgress(widget.request),
+              const SizedBox(height: 12),
+              _buildActionButtons(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildActionButtons() {
+    // Show action buttons for advisors and HOD based on request status
+    if (widget.isAdvisor && widget.request.advisorStatus == 'pending') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _approveRequest,
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Approve'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.successColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _rejectRequest,
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Reject'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.rejectedColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (widget.isHod && widget.request.hodStatus == 'pending') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _approveRequest,
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Approve'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.successColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _rejectRequest,
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Reject'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.rejectedColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (widget.request.status == 'pending' &&
+        !widget.isAdvisor &&
+        !widget.isHod) {
+      // Show edit and delete for student
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditRequestScreen(request: widget.request),
+                ),
+              );
+            },
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text('Edit'),
+          ),
+          TextButton.icon(
+            onPressed: () => _confirmDelete(context),
+            icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+            label: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Future<void> _approveRequest() async {
+    setState(() => _isProcessing = true);
+
+    try {
+      final gatePassProvider =
+          Provider.of<GatePassProvider>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      if (widget.isAdvisor) {
+        await gatePassProvider.advisorAction(
+          requestId: widget.request.id,
+          advisorId: authProvider.userProfile!.id,
+          approved: true,
+        );
+      } else if (widget.isHod) {
+        await gatePassProvider.hodAction(
+          requestId: widget.request.id,
+          hodId: authProvider.userProfile!.id,
+          approved: true,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Request approved successfully')),
+        );
+        widget.onActionComplete?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _rejectRequest() async {
+    final remarksController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Request'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Are you sure you want to reject this request?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: remarksController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Enter remarks (optional)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performRejectAction(remarksController.text);
+            },
+            child: const Text('Reject', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performRejectAction(String remarks) async {
+    setState(() => _isProcessing = true);
+
+    try {
+      final gatePassProvider =
+          Provider.of<GatePassProvider>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      if (widget.isAdvisor) {
+        await gatePassProvider.advisorAction(
+          requestId: widget.request.id,
+          advisorId: authProvider.userProfile!.id,
+          approved: false,
+          remarks: remarks.isNotEmpty ? remarks : null,
+        );
+      } else if (widget.isHod) {
+        await gatePassProvider.hodAction(
+          requestId: widget.request.id,
+          hodId: authProvider.userProfile!.id,
+          approved: false,
+          remarks: remarks.isNotEmpty ? remarks : null,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Request rejected')),
+        );
+        widget.onActionComplete?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   Widget _buildStatusBadge(String status) {
@@ -216,24 +457,32 @@ class RequestCard extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 'Request Details',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
-              _buildDetailRow('Reason', request.reason),
-              _buildDetailRow('Destination', request.destination),
+              _buildDetailRow('Student Name', widget.request.studentName ?? 'N/A'),
+              _buildDetailRow('Class', widget.request.className ?? widget.request.classId),
+              _buildDetailRow('Department', widget.request.departmentName ?? widget.request.departmentId),
+              const SizedBox(height: 12),
+              _buildDetailRow('Reason', widget.request.reason),
+              _buildDetailRow('Destination', widget.request.destination),
               _buildDetailRow(
                 'From',
-                DateFormat('MMM dd, yyyy - HH:mm').format(request.fromDate),
+                DateFormat('MMM dd, yyyy - HH:mm')
+                    .format(widget.request.fromDate),
               ),
               _buildDetailRow(
                 'To',
-                DateFormat('MMM dd, yyyy - HH:mm').format(request.toDate),
+                DateFormat('MMM dd, yyyy - HH:mm')
+                    .format(widget.request.toDate),
               ),
-              _buildDetailRow('Status', request.getStatusText()),
-              if (request.advisorRemarks != null)
-                _buildDetailRow('Advisor Remarks', request.advisorRemarks!),
-              if (request.hodRemarks != null)
-                _buildDetailRow('HOD Remarks', request.hodRemarks!),
+              _buildDetailRow('Status', widget.request.getStatusText()),
+              if (widget.request.advisorRemarks != null)
+                _buildDetailRow(
+                    'Advisor Remarks', widget.request.advisorRemarks!),
+              if (widget.request.hodRemarks != null)
+                _buildDetailRow('HOD Remarks', widget.request.hodRemarks!),
             ],
           ),
         ),
@@ -280,7 +529,7 @@ class RequestCard extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context);
               await Provider.of<GatePassProvider>(context, listen: false)
-                  .deleteRequest(request.id);
+                  .deleteRequest(widget.request.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Request deleted')),
               );

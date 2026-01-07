@@ -1,8 +1,11 @@
 class GatePassModel {
   final String id;
   final String studentId;
+  final String? studentName;
   final String classId;
+  final String? className;
   final String departmentId;
+  final String? departmentName;
   final String reason;
   final String destination;
   final DateTime fromDate;
@@ -23,8 +26,11 @@ class GatePassModel {
   GatePassModel({
     required this.id,
     required this.studentId,
+    this.studentName,
     required this.classId,
+    this.className,
     required this.departmentId,
+    this.departmentName,
     required this.reason,
     required this.destination,
     required this.fromDate,
@@ -47,8 +53,11 @@ class GatePassModel {
     return GatePassModel(
       id: json['id'] as String,
       studentId: json['student_id'] as String,
+      studentName: json['student_name'] as String?,
       classId: json['class_id'] as String,
+      className: json['class_name'] as String?,
       departmentId: json['department_id'] as String,
+      departmentName: json['department_name'] as String?,
       reason: json['reason'] as String,
       destination: json['destination'] as String,
       fromDate: DateTime.parse(json['from_date'] as String),
@@ -78,8 +87,11 @@ class GatePassModel {
     return {
       'id': id,
       'student_id': studentId,
+      'student_name': studentName,
       'class_id': classId,
+      'class_name': className,
       'department_id': departmentId,
+      'department_name': departmentName,
       'reason': reason,
       'destination': destination,
       'from_date': fromDate.toIso8601String(),

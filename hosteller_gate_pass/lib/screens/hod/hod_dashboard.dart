@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/request_card.dart';
-import '../advisor/review_request_screen.dart';
 
 class HodDashboard extends StatefulWidget {
   const HodDashboard({Key? key}) : super(key: key);
@@ -142,21 +141,10 @@ class _HodDashboardState extends State<HodDashboard>
         itemCount: requests.length,
         itemBuilder: (context, index) {
           final request = requests[index];
-          return GestureDetector(
-            onTap: isPending && request.hodStatus == 'pending'
-                ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReviewRequestScreen(
-                          request: request,
-                          isAdvisor: false,
-                        ),
-                      ),
-                    );
-                  }
-                : null,
-            child: RequestCard(request: request),
+          return RequestCard(
+            request: request,
+            isHod: true,
+            onActionComplete: _loadData,
           );
         },
       ),

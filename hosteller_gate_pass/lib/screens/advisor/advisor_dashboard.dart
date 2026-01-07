@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/request_card.dart';
-import 'review_request_screen.dart';
 import 'manage_students_screen.dart';
 import 'add_student_screen.dart';
 import 'bulk_upload_students_screen.dart';
@@ -198,19 +197,10 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
         itemCount: requests.length,
         itemBuilder: (context, index) {
           final request = requests[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReviewRequestScreen(
-                    request: request,
-                    isAdvisor: true,
-                  ),
-                ),
-              );
-            },
-            child: RequestCard(request: request),
+          return RequestCard(
+            request: request,
+            isAdvisor: true,
+            onActionComplete: _loadData,
           );
         },
       ),

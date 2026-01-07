@@ -45,13 +45,26 @@ class GatePassService {
   Future<List<GatePassModel>> getStudentRequests(String studentId) async {
     final response = await _supabase
         .from('gate_pass_requests')
-        .select()
+        .select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''')
         .eq('student_id', studentId)
         .order('created_at', ascending: false);
-    
-    return (response as List)
-        .map((json) => GatePassModel.fromJson(json))
-        .toList();
+
+    return (response as List).map<GatePassModel>((json) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+      
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+      
+      return GatePassModel.fromJson(json);
+    }).toList();
   }
   
   // Get requests for advisor (by class)
@@ -61,14 +74,27 @@ class GatePassService {
 }) async {
   final response = await Supabase.instance.client
       .from('gate_pass_requests')
-      .select()
+      .select('''
+        *,
+        users:student_id(full_name),
+        classes:class_id(name),
+        departments:department_id(name)
+      ''')
       .eq('class_id', classId)
       .eq('department_id', departmentId)
       .order('created_at', ascending: false);
 
-  return response
-      .map<GatePassModel>((json) => GatePassModel.fromJson(json))
-      .toList();
+  return (response as List).map<GatePassModel>((json) {
+    final studentData = json['users'];
+    final classData = json['classes'];
+    final deptData = json['departments'];
+    
+    json['student_name'] = studentData?['full_name'];
+    json['class_name'] = classData?['name'];
+    json['department_name'] = deptData?['name'];
+    
+    return GatePassModel.fromJson(json);
+  }).toList();
 }
 
   
@@ -76,13 +102,26 @@ class GatePassService {
   Future<List<GatePassModel>> getHodRequests(String departmentId) async {
     final response = await _supabase
         .from('gate_pass_requests')
-        .select()
+        .select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''')
         .eq('department_id', departmentId)
         .order('created_at', ascending: false);
     
-    return (response as List)
-        .map((json) => GatePassModel.fromJson(json))
-        .toList();
+    return (response as List).map<GatePassModel>((json) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+      
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+      
+      return GatePassModel.fromJson(json);
+    }).toList();
   }
   
   // Update request (student edit)

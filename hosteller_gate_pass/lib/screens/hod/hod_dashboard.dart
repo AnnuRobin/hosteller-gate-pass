@@ -39,9 +39,9 @@ class _HodDashboardState extends State<HodDashboard>
     final authProvider = Provider.of<AuthProvider>(context);
     final gatePassProvider = Provider.of<GatePassProvider>(context);
 
-    // Filter for requests waiting for HOD approval
+    // Filter for requests waiting for HOD approval (show any request where HOD hasn't acted yet)
     final pendingHodRequests = gatePassProvider.requests
-        .where((r) => r.advisorStatus == 'approved' && r.hodStatus == 'pending')
+        .where((r) => r.hodStatus == 'pending')
         .toList();
 
     // All requests in the department

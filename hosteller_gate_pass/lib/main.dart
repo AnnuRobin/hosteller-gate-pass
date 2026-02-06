@@ -4,10 +4,12 @@ import 'config/supabase_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/gate_pass_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/warden_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/student/student_dashboard.dart';
 import 'screens/advisor/advisor_dashboard.dart';
 import 'screens/hod/hod_dashboard.dart';
+import 'screens/warden/warden_dashboard.dart';
 import 'utils/constants.dart';
 
 void main() async {
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => GatePassProvider()),
+        ChangeNotifierProvider(create: (_) => WardenProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
@@ -77,11 +80,11 @@ class AuthWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        
+
         if (authProvider.currentUser == null) {
           return const LoginScreen();
         }
-        
+
         // Route based on user role
         switch (authProvider.userProfile?.role) {
           case AppConstants.roleStudent:
@@ -90,6 +93,8 @@ class AuthWrapper extends StatelessWidget {
             return const AdvisorDashboard();
           case AppConstants.roleHod:
             return const HodDashboard();
+          case AppConstants.roleWarden:
+            return const WardenDashboard();
           default:
             return const LoginScreen();
         }

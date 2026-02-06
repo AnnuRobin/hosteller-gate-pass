@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -112,7 +111,7 @@ class _ReviewRequestScreenState extends State<ReviewRequestScreen> {
                         ),
                         const SizedBox(width: 8),
                         const Text(
-                          'Your Remarks (Optional)',
+                          'Comments (Optional)',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -120,11 +119,21 @@ class _ReviewRequestScreenState extends State<ReviewRequestScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add comments when approving or rejecting this request',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _remarksController,
                       decoration: InputDecoration(
-                        hintText: 'Add any comments or instructions...',
+                        hintText:
+                            'Enter your approval/rejection comments here...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

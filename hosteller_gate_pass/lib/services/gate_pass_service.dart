@@ -63,7 +63,7 @@ class GatePassService {
     }).toList();
   }
 
-  // Get requests for advisor (by class)
+  // Get requests for advisor (by class) - only pending requests awaiting advisor approval
   Future<List<GatePassModel>> getAdvisorRequests({
     required String classId,
     required String departmentId,
@@ -78,6 +78,7 @@ class GatePassService {
       ''')
         .eq('class_id', classId)
         .eq('department_id', departmentId)
+        .eq('advisor_status', 'pending')
         .order('created_at', ascending: false);
 
     return (response as List).map<GatePassModel>((json) {
@@ -93,7 +94,7 @@ class GatePassService {
     }).toList();
   }
 
-  // Get requests for HOD (by department)
+  // Get requests for HOD (by department) - only requests approved by advisors
   Future<List<GatePassModel>> getHodRequests(String departmentId) async {
     final response = await _supabase
         .from('gate_pass_requests')
@@ -104,6 +105,7 @@ class GatePassService {
           departments:department_id(name)
         ''')
         .eq('department_id', departmentId)
+        .eq('advisor_status', 'approved')
         .order('created_at', ascending: false);
 
     return (response as List).map<GatePassModel>((json) {
@@ -144,7 +146,26 @@ class GatePassService {
     await _supabase.from('gate_pass_requests').delete().eq('id', requestId);
   }
 
-  // Advisor approve/reject
+  /// Advisor approval/rejection of gate pass request with optional comments
+  ///
+  /// When an Advisor approves:
+  /// - Status changes from 'pending' to 'advisor_approved'
+  /// - Request moves to HOD for final approval
+  /// - Approval comments/remarks are stored for HOD review
+  /// - Notification sent to HOD for review
+  /// - Parent is flagged for notification (parent_notified = true)
+  ///
+  /// When an Advisor rejects:
+  /// - Status changes to 'rejected'
+  /// - Rejection comments are stored for student reference
+  /// - Request is closed and cannot proceed further
+  /// - Student is notified of rejection with advisor's comments
+  ///
+  /// Parameters:
+  ///   - requestId: The gate pass request ID
+  ///   - advisorId: The advisor's user ID
+  ///   - approved: True for approval, false for rejection
+  ///   - remarks: Comments/notes from advisor (optional but recommended for approvals)
   Future<void> advisorAction({
     required String requestId,
     required String advisorId,
@@ -187,7 +208,26 @@ class GatePassService {
     }
   }
 
-  // HOD approve/reject
+  /// HOD (Head of Department) final approval/rejection of gate pass request with optional comments
+  ///
+  /// When HOD approves:
+  /// - Status changes to 'approved' (final approval)
+  /// - Approval comments/remarks are stored in the request
+  /// - Gate pass is now fully approved and active
+  /// - Student receives final approval notification with HOD's approval comments
+  /// - Gate pass can now be used by the student
+  ///
+  /// When HOD rejects:
+  /// - Status changes to 'rejected'
+  /// - Rejection comments are stored for student reference
+  /// - Request is closed
+  /// - Student is notified of rejection by HOD with comments
+  ///
+  /// Parameters:
+  ///   - requestId: The gate pass request ID
+  ///   - hodId: The HOD's user ID
+  ///   - approved: True for approval, false for rejection
+  ///   - remarks: Comments/notes from HOD (optional but recommended for approvals)
   Future<void> hodAction({
     required String requestId,
     required String hodId,
@@ -319,5 +359,101 @@ class GatePassService {
         'type': 'request_created',
       });
     }
+  }
+
+  // Get requests for warden (all HOD approved requests)
+  Future<List<GatePassModel>> getWardenRequests() async {
+    final response = await _supabase.from('gate_pass_requests').select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''').eq('hod_status', 'approved').order('created_at', ascending: false);
+
+    return (response as List).map<GatePassModel>((json) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+
+      return GatePassModel.fromJson(json);
+    }).toList();
+  }
+
+  // Warden approve/reject with exit time
+  Future<void> wardenAction({
+    required String requestId,
+    required String wardenId,
+    required bool approved,
+    DateTime? exitTime,
+    String? remarks,
+  }) async {
+    await _supabase.from('gate_pass_requests').update({
+      'warden_status': approved ? 'approved' : 'rejected',
+      'status': approved ? 'warden_approved' : 'rejected',
+      'warden_id': wardenId,
+      'warden_approved_at': DateTime.now().toIso8601String(),
+      'exit_time': exitTime?.toIso8601String(),
+      'warden_remarks': remarks,
+    }).eq('id', requestId);
+
+    // Get request details for notification
+    final request = await _supabase
+        .from('gate_pass_requests')
+        .select('student_id')
+        .eq('id', requestId)
+        .single();
+
+    // Notify student
+    await _supabase.from('notifications').insert({
+      'user_id': request['student_id'],
+      'pass_request_id': requestId,
+      'title': approved ? 'Gate Pass Approved' : 'Gate Pass Rejected',
+      'message': approved
+          ? 'Your gate pass has been approved by the warden'
+          : 'Your gate pass has been rejected by the warden',
+      'type': approved ? 'request_approved' : 'request_rejected',
+    });
+  }
+
+  // Record entry time when student returns
+  Future<void> recordEntryTime({
+    required String requestId,
+    required DateTime entryTime,
+  }) async {
+    await _supabase.from('gate_pass_requests').update({
+      'entry_time': entryTime.toIso8601String(),
+    }).eq('id', requestId);
+  }
+
+  // Update final status (granted or denied)
+  Future<void> updateFinalStatus({
+    required String requestId,
+    required String finalStatus,
+    String? remarks,
+  }) async {
+    await _supabase.from('gate_pass_requests').update({
+      'final_status': finalStatus,
+      'warden_remarks': remarks,
+    }).eq('id', requestId);
+
+    // Get request details for notification
+    final request = await _supabase
+        .from('gate_pass_requests')
+        .select('student_id')
+        .eq('id', requestId)
+        .single();
+
+    // Notify student about final status
+    await _supabase.from('notifications').insert({
+      'user_id': request['student_id'],
+      'pass_request_id': requestId,
+      'title': 'Gate Pass Status Updated',
+      'message': 'Your gate pass request final status is: $finalStatus',
+      'type': 'status_updated',
+    });
   }
 }

@@ -5,12 +5,14 @@ import '../utils/constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/gate_pass_provider.dart';
+import '../providers/warden_provider.dart';
 import '../screens/student/edit_request_screen.dart';
 
 class RequestCard extends StatefulWidget {
   final GatePassModel request;
   final bool isAdvisor;
   final bool isHod;
+  final bool isWarden;
   final VoidCallback? onActionComplete;
 
   const RequestCard({
@@ -18,6 +20,7 @@ class RequestCard extends StatefulWidget {
     required this.request,
     this.isAdvisor = false,
     this.isHod = false,
+    this.isWarden = false,
     this.onActionComplete,
   }) : super(key: key);
 
@@ -172,9 +175,42 @@ class _RequestCardState extends State<RequestCard> {
           ],
         ),
       );
+    } else if (widget.isWarden && widget.request.wardenStatus == 'pending') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _approveRequest,
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Approve'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.successColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _rejectRequest,
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Reject'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.rejectedColor,
+                disabledBackgroundColor: Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+      );
     } else if (widget.request.status == 'pending' &&
         !widget.isAdvisor &&
-        !widget.isHod) {
+        !widget.isHod &&
+        !widget.isWarden) {
       // Show edit and delete for student
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -203,24 +239,77 @@ class _RequestCardState extends State<RequestCard> {
   }
 
   Future<void> _approveRequest() async {
+    final remarksController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Approve Request'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Add approval comments (optional)'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: remarksController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Enter approval comments...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performApproveAction(remarksController.text);
+            },
+            child: const Text('Approve',
+                style: TextStyle(color: AppConstants.successColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performApproveAction(String remarks) async {
     setState(() => _isProcessing = true);
 
     try {
-      final gatePassProvider =
-          Provider.of<GatePassProvider>(context, listen: false);
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       if (widget.isAdvisor) {
+        final gatePassProvider =
+            Provider.of<GatePassProvider>(context, listen: false);
         await gatePassProvider.advisorAction(
           requestId: widget.request.id,
           advisorId: authProvider.userProfile!.id,
           approved: true,
+          remarks: remarks.isNotEmpty ? remarks : null,
         );
       } else if (widget.isHod) {
+        final gatePassProvider =
+            Provider.of<GatePassProvider>(context, listen: false);
         await gatePassProvider.hodAction(
           requestId: widget.request.id,
           hodId: authProvider.userProfile!.id,
           approved: true,
+          remarks: remarks.isNotEmpty ? remarks : null,
+        );
+      } else if (widget.isWarden) {
+        final wardenProvider =
+            Provider.of<WardenProvider>(context, listen: false);
+        await wardenProvider.wardenApprove(
+          requestId: widget.request.id,
+          wardenId: authProvider.userProfile!.id,
         );
       }
 
@@ -288,11 +377,11 @@ class _RequestCardState extends State<RequestCard> {
     setState(() => _isProcessing = true);
 
     try {
-      final gatePassProvider =
-          Provider.of<GatePassProvider>(context, listen: false);
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       if (widget.isAdvisor) {
+        final gatePassProvider =
+            Provider.of<GatePassProvider>(context, listen: false);
         await gatePassProvider.advisorAction(
           requestId: widget.request.id,
           advisorId: authProvider.userProfile!.id,
@@ -300,10 +389,20 @@ class _RequestCardState extends State<RequestCard> {
           remarks: remarks.isNotEmpty ? remarks : null,
         );
       } else if (widget.isHod) {
+        final gatePassProvider =
+            Provider.of<GatePassProvider>(context, listen: false);
         await gatePassProvider.hodAction(
           requestId: widget.request.id,
           hodId: authProvider.userProfile!.id,
           approved: false,
+          remarks: remarks.isNotEmpty ? remarks : null,
+        );
+      } else if (widget.isWarden) {
+        final wardenProvider =
+            Provider.of<WardenProvider>(context, listen: false);
+        await wardenProvider.wardenReject(
+          requestId: widget.request.id,
+          wardenId: authProvider.userProfile!.id,
           remarks: remarks.isNotEmpty ? remarks : null,
         );
       }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'config/supabase_config.dart';
 import 'providers/auth_provider.dart';
+import 'providers/staff_auth_provider.dart';
 import 'providers/gate_pass_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/warden_provider.dart';
@@ -10,6 +11,7 @@ import 'screens/student/student_dashboard.dart';
 import 'screens/advisor/advisor_dashboard.dart';
 import 'screens/hod/hod_dashboard.dart';
 import 'screens/warden/warden_dashboard.dart';
+import 'screens/admin/admin_dashboard.dart';
 import 'utils/constants.dart';
 
 void main() async {
@@ -26,6 +28,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => StaffAuthProvider()),
         ChangeNotifierProvider(create: (_) => GatePassProvider()),
         ChangeNotifierProvider(create: (_) => WardenProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
@@ -95,6 +98,8 @@ class AuthWrapper extends StatelessWidget {
             return const HodDashboard();
           case AppConstants.roleWarden:
             return const WardenDashboard();
+          case AppConstants.roleAdmin:
+            return const AdminDashboard();
           default:
             return const LoginScreen();
         }

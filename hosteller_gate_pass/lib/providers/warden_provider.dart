@@ -97,4 +97,16 @@ class WardenProvider with ChangeNotifier {
     // Reload requests after action
     await loadWardenRequests();
   }
+
+  // Delete gate pass request
+  Future<void> deleteRequest(String requestId) async {
+    try {
+      await _service.deleteRequest(requestId);
+      // Reload requests after deletion
+      await loadWardenRequests();
+    } catch (e) {
+      debugPrint('Error deleting request: $e');
+      rethrow;
+    }
+  }
 }

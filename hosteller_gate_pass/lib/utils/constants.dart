@@ -19,6 +19,7 @@ class AppConstants {
   static const String roleAdvisor = 'advisor';
   static const String roleHod = 'hod';
   static const String roleWarden = 'warden';
+  static const String roleAdmin = 'admin';
   static const String roleParent = 'parent';
 
   // Status

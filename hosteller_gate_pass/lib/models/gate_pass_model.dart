@@ -27,6 +27,9 @@ class GatePassModel {
   final DateTime? entryTime;
   final String? wardenRemarks;
   final String? finalStatus; // 'granted' or 'denied'
+  final String parentApprovalStatus; // 'pending', 'approved', 'rejected'
+  final DateTime? parentApprovedAt;
+  final String? parentRemarks;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -59,6 +62,9 @@ class GatePassModel {
     this.entryTime,
     this.wardenRemarks,
     this.finalStatus,
+    this.parentApprovalStatus = 'pending',
+    this.parentApprovedAt,
+    this.parentRemarks,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -103,6 +109,11 @@ class GatePassModel {
           : null,
       wardenRemarks: json['warden_remarks'] as String?,
       finalStatus: json['final_status'] as String?,
+      parentApprovalStatus: json['parent_approval_status'] as String? ?? 'pending',
+      parentApprovedAt: json['parent_approved_at'] != null
+          ? DateTime.parse(json['parent_approved_at'] as String)
+          : null,
+      parentRemarks: json['parent_remarks'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -138,6 +149,9 @@ class GatePassModel {
       'entry_time': entryTime?.toIso8601String(),
       'warden_remarks': wardenRemarks,
       'final_status': finalStatus,
+      'parent_approval_status': parentApprovalStatus,
+      'parent_approved_at': parentApprovedAt?.toIso8601String(),
+      'parent_remarks': parentRemarks,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

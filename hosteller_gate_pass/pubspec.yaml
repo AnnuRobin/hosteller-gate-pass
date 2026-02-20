@@ -20,8 +20,8 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # File handling for CSV upload
-  file_picker: ^6.1.1
-  csv: ^5.1.1
+  file_picker: ^10.3.10
+  csv: ^6.0.0
   
   # Notifications
   flutter_local_notifications: ^16.3.0

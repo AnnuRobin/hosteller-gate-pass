@@ -57,38 +57,21 @@ class AdminService {
     String? homeAddress,
   }) async {
     try {
-      // Create auth user using admin API
-      final authResponse = await _supabase.auth.admin.createUser(
-        AdminUserAttributes(
-          email: email,
-          password: password,
-          emailConfirm: true,
-        ),
-      );
+      // Call Supabase RPC function to create user
+      final response = await _supabase.rpc('admin_create_user', params: {
+        'p_email': email,
+        'p_password': password,
+        'p_full_name': fullName,
+        'p_role': role,
+        'p_phone': phone,
+        'p_department_id': departmentId,
+        'p_class_id': classId,
+        'p_semester': semester,
+        'p_section': section,
+        'p_home_address': homeAddress,
+      });
 
-      if (authResponse.user != null) {
-        // Create user profile
-        await _supabase.from('users').insert({
-          'id': authResponse.user!.id,
-          'email': email,
-          'full_name': fullName,
-          'phone': phone,
-          'role': role,
-          'department_id': departmentId,
-          'class_id': classId,
-          'semester': semester,
-          'section': section,
-          'home_address': homeAddress,
-          'email_verified': true, // Auto-verify for admin-created users
-          'email_verified_at': DateTime.now().toIso8601String(),
-        });
-
-        // Log admin action
-        await _logAdminAction('create_user', authResponse.user!.id, {
-          'email': email,
-          'role': role,
-        });
-      }
+      print('User created successfully: $response');
     } catch (e) {
       print('Error creating user: $e');
       rethrow;
@@ -108,26 +91,19 @@ class AdminService {
     String? homeAddress,
   }) async {
     try {
-      final updates = <String, dynamic>{};
-      
-      if (fullName != null) updates['full_name'] = fullName;
-      if (phone != null) updates['phone'] = phone;
-      if (role != null) updates['role'] = role;
-      if (departmentId != null) updates['department_id'] = departmentId;
-      if (classId != null) updates['class_id'] = classId;
-      if (semester != null) updates['semester'] = semester;
-      if (section != null) updates['section'] = section;
-      if (homeAddress != null) updates['home_address'] = homeAddress;
+      await _supabase.rpc('admin_update_user', params: {
+        'p_user_id': userId,
+        'p_full_name': fullName,
+        'p_phone': phone,
+        'p_role': role,
+        'p_department_id': departmentId,
+        'p_class_id': classId,
+        'p_semester': semester,
+        'p_section': section,
+        'p_home_address': homeAddress,
+      });
 
-      if (updates.isNotEmpty) {
-        await _supabase
-            .from('users')
-            .update(updates)
-            .eq('id', userId);
-
-        // Log admin action
-        await _logAdminAction('update_user', userId, updates);
-      }
+      print('User updated successfully');
     } catch (e) {
       print('Error updating user: $e');
       rethrow;
@@ -137,17 +113,11 @@ class AdminService {
   // Delete user
   Future<void> deleteUser(String userId) async {
     try {
-      // Delete from users table (this will cascade to related records)
-      await _supabase
-          .from('users')
-          .delete()
-          .eq('id', userId);
+      await _supabase.rpc('admin_delete_user', params: {
+        'p_user_id': userId,
+      });
 
-      // Delete auth user
-      await _supabase.auth.admin.deleteUser(userId);
-
-      // Log admin action
-      await _logAdminAction('delete_user', userId, {});
+      print('User deleted successfully');
     } catch (e) {
       print('Error deleting user: $e');
       rethrow;
@@ -157,13 +127,12 @@ class AdminService {
   // Reset user password
   Future<void> resetUserPassword(String userId, String newPassword) async {
     try {
-      await _supabase.auth.admin.updateUserById(
-        userId,
-        attributes: AdminUserAttributes(password: newPassword),
-      );
+      await _supabase.rpc('admin_reset_password', params: {
+        'p_user_id': userId,
+        'p_new_password': newPassword,
+      });
 
-      // Log admin action
-      await _logAdminAction('reset_password', userId, {});
+      print('Password reset successfully');
     } catch (e) {
       print('Error resetting password: $e');
       rethrow;
@@ -206,4 +175,30 @@ class AdminService {
       print('Error logging admin action: $e');
     }
   }
+
+  // Bulk create students
+  Future<Map<String, dynamic>> bulkCreateStudents({
+    required List<Map<String, dynamic>> students,
+    required String departmentId,
+    String? classId,
+    required int semester,
+    required String section,
+  }) async {
+    try {
+      final response = await _supabase.rpc('admin_bulk_create_students', params: {
+        'p_students': students,
+        'p_department_id': departmentId,
+        'p_class_id': classId,
+        'p_semester': semester,
+        'p_section': section,
+      });
+
+      print('Bulk creation response: $response');
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      print('Error bulk creating students: $e');
+      rethrow;
+    }
+  }
+
 }

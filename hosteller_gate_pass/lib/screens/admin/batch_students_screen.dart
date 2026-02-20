@@ -4,6 +4,7 @@ import '../../services/admin_service.dart';
 import '../../models/batch_model.dart';
 import '../../models/user_model.dart';
 import '../../utils/constants.dart';
+import 'edit_user_screen.dart';
 
 class BatchStudentsScreen extends StatefulWidget {
   final BatchModel batch;
@@ -218,17 +219,21 @@ class _BatchStudentsScreenState extends State<BatchStudentsScreen> {
               ),
             ),
           ],
-          onSelected: (value) {
+          onSelected: (value) async {
             switch (value) {
               case 'view':
                 _showStudentDetails(student);
                 break;
               case 'edit':
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Edit student feature coming soon!'),
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditUserScreen(user: student),
                   ),
                 );
+                if (result == true) {
+                  _loadStudents(); // Refresh student list
+                }
                 break;
               case 'delete':
                 _confirmDeleteStudent(student);

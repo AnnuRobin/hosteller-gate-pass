@@ -146,26 +146,7 @@ class GatePassService {
     await _supabase.from('gate_pass_requests').delete().eq('id', requestId);
   }
 
-  /// Advisor approval/rejection of gate pass request with optional comments
-  ///
-  /// When an Advisor approves:
-  /// - Status changes from 'pending' to 'advisor_approved'
-  /// - Request moves to HOD for final approval
-  /// - Approval comments/remarks are stored for HOD review
-  /// - Notification sent to HOD for review
-  /// - Parent is flagged for notification (parent_notified = true)
-  ///
-  /// When an Advisor rejects:
-  /// - Status changes to 'rejected'
-  /// - Rejection comments are stored for student reference
-  /// - Request is closed and cannot proceed further
-  /// - Student is notified of rejection with advisor's comments
-  ///
-  /// Parameters:
-  ///   - requestId: The gate pass request ID
-  ///   - advisorId: The advisor's user ID
-  ///   - approved: True for approval, false for rejection
-  ///   - remarks: Comments/notes from advisor (optional but recommended for approvals)
+  
   Future<void> advisorAction({
     required String requestId,
     required String advisorId,
@@ -208,26 +189,8 @@ class GatePassService {
     }
   }
 
-  /// HOD (Head of Department) final approval/rejection of gate pass request with optional comments
-  ///
-  /// When HOD approves:
-  /// - Status changes to 'approved' (final approval)
-  /// - Approval comments/remarks are stored in the request
-  /// - Gate pass is now fully approved and active
-  /// - Student receives final approval notification with HOD's approval comments
-  /// - Gate pass can now be used by the student
-  ///
-  /// When HOD rejects:
-  /// - Status changes to 'rejected'
-  /// - Rejection comments are stored for student reference
-  /// - Request is closed
-  /// - Student is notified of rejection by HOD with comments
-  ///
-  /// Parameters:
-  ///   - requestId: The gate pass request ID
-  ///   - hodId: The HOD's user ID
-  ///   - approved: True for approval, false for rejection
-  ///   - remarks: Comments/notes from HOD (optional but recommended for approvals)
+  
+ 
   Future<void> hodAction({
     required String requestId,
     required String hodId,

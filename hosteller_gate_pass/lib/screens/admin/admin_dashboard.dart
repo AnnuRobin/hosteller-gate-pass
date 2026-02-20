@@ -6,6 +6,11 @@ import '../../services/admin_service.dart';
 import '../../models/user_model.dart';
 import '../../utils/constants.dart';
 import 'departments_screen.dart';
+import 'create_user_screen.dart';
+import 'edit_user_screen.dart';
+import 'audit_logs_screen.dart';
+import 'bulk_create_class_screen.dart';
+import 'manage_staff_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -25,6 +30,10 @@ class _AdminDashboardState extends State<AdminDashboard>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    // Rebuild when tab changes so the FAB visibility updates
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
     _loadUsers();
   }
 
@@ -144,31 +153,31 @@ class _AdminDashboardState extends State<AdminDashboard>
                       _buildUserList(_allUsers
                           .where((u) => u.role == 'student')
                           .toList()),
-                      _buildUserList(_allUsers
-                          .where((u) =>
-                              u.role == 'warden' ||
-                              u.role == 'hod' ||
-                              u.role == 'advisor')
-                          .toList()),
+                      const ManageStaffScreen(),
                       _buildUserList(_allUsers),
                     ],
                   ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navigate to create user screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Create user feature coming soon!'),
+      floatingActionButton: _tabController.index == 3
+          ? null // ManageStaffScreen has its own FAB-less add via Overview
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateUserScreen(),
+                  ),
+                );
+                if (result == true) {
+                  _loadUsers();
+                }
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text('Add User'),
+              backgroundColor: AppConstants.primaryColor,
             ),
-          );
-        },
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add User'),
-        backgroundColor: AppConstants.primaryColor,
-      ),
     );
   }
 
@@ -237,11 +246,37 @@ class _AdminDashboardState extends State<AdminDashboard>
             ),
             const SizedBox(height: 16),
             _buildQuickActionCard(
-              'User Management',
-              'Create, edit, or delete users',
-              Icons.people,
+              'Bulk Create Class',
+              'Import students via CSV or manual entry',
+              Icons.upload_file,
+              () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BulkCreateClassScreen(),
+                  ),
+                );
+                if (result == true) {
+                  _loadUsers();
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionCard(
+              'Manage Staff',
+              'Add or manage HODs, Wardens & Advisors',
+              Icons.badge,
               () {
                 _tabController.animateTo(3);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionCard(
+              'User Management',
+              'Create, edit, or delete any user',
+              Icons.people,
+              () {
+                _tabController.animateTo(4);
               },
             ),
             const SizedBox(height: 12),
@@ -250,9 +285,10 @@ class _AdminDashboardState extends State<AdminDashboard>
               'See all admin actions',
               Icons.history,
               () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Audit logs feature coming soon!'),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AuditLogsScreen(),
                   ),
                 );
               },
@@ -429,13 +465,17 @@ class _AdminDashboardState extends State<AdminDashboard>
                     ),
                   ),
                 ],
-                onSelected: (value) {
+                onSelected: (value) async {
                   if (value == 'edit') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Edit user feature coming soon!'),
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditUserScreen(user: user),
                       ),
                     );
+                    if (result == true) {
+                      _loadUsers(); // Refresh user list
+                    }
                   } else if (value == 'delete') {
                     _confirmDeleteUser(user);
                   }

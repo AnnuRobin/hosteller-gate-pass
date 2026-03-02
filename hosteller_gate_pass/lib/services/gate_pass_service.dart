@@ -324,14 +324,26 @@ class GatePassService {
     }
   }
 
-  // Get requests for warden (all HOD approved requests)
-  Future<List<GatePassModel>> getWardenRequests() async {
-    final response = await _supabase.from('gate_pass_requests').select('''
+  // Get requests for warden - filtered by warden's hostel_name
+  Future<List<GatePassModel>> getWardenRequests(String wardenId) async {
+    // First, get the warden's hostel_name
+    final wardenData = await _supabase
+        .from('users')
+        .select('hostel_name')
+        .eq('id', wardenId)
+        .single();
+
+    final wardenHostelName = wardenData['hostel_name'] as String?;
+
+    // Build base query for HOD-approved gate pass requests
+    var query = _supabase.from('gate_pass_requests').select('''
           *,
-          users:student_id(full_name),
+          users:student_id(full_name, hostel_name),
           classes:class_id(name),
           departments:department_id(name)
-        ''').eq('hod_status', 'approved').order('created_at', ascending: false);
+        ''').eq('hod_status', 'approved');
+
+    final response = await query.order('created_at', ascending: false);
 
     return (response as List).map<GatePassModel>((json) {
       final studentData = json['users'];
@@ -339,10 +351,18 @@ class GatePassService {
       final deptData = json['departments'];
 
       json['student_name'] = studentData?['full_name'];
+      json['hostel_name'] = studentData?['hostel_name'];
       json['class_name'] = classData?['name'];
       json['department_name'] = deptData?['name'];
 
       return GatePassModel.fromJson(json);
+    }).where((pass) {
+      // If hostel_name is set for the warden, filter to only matching hostel
+      if (wardenHostelName != null && wardenHostelName.isNotEmpty) {
+        return pass.hostelName?.toLowerCase() == wardenHostelName.toLowerCase();
+      }
+      // If warden has no hostel assigned, show all (fallback)
+      return true;
     }).toList();
   }
 

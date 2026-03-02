@@ -6,6 +6,7 @@ class WardenProvider with ChangeNotifier {
   final GatePassService _service = GatePassService();
   List<GatePassModel> _requests = [];
   bool _isLoading = false;
+  String _wardenId = '';
 
   List<GatePassModel> get requests => _requests;
   bool get isLoading => _isLoading;
@@ -24,12 +25,13 @@ class WardenProvider with ChangeNotifier {
       .where((r) => r.wardenStatus == 'approved' && r.entryTime == null)
       .toList();
 
-  Future<void> loadWardenRequests() async {
+  Future<void> loadWardenRequests(String wardenId) async {
+    _wardenId = wardenId;
     _isLoading = true;
     notifyListeners();
 
     try {
-      _requests = await _service.getWardenRequests();
+      _requests = await _service.getWardenRequests(wardenId);
     } catch (e) {
       debugPrint('Error loading warden requests: $e');
     }
@@ -51,7 +53,7 @@ class WardenProvider with ChangeNotifier {
       exitTime: exitTime ?? DateTime.now(),
     );
     // Reload requests after action
-    await loadWardenRequests();
+    await loadWardenRequests(_wardenId.isNotEmpty ? _wardenId : wardenId);
   }
 
   // Warden action - denial
@@ -67,7 +69,7 @@ class WardenProvider with ChangeNotifier {
       remarks: remarks,
     );
     // Reload requests after action
-    await loadWardenRequests();
+    await loadWardenRequests(_wardenId.isNotEmpty ? _wardenId : wardenId);
   }
 
   // Record student entry time
@@ -80,7 +82,7 @@ class WardenProvider with ChangeNotifier {
       entryTime: entryTime ?? DateTime.now(),
     );
     // Reload requests after action
-    await loadWardenRequests();
+    await loadWardenRequests(_wardenId);
   }
 
   // Update final status (granted or denied)
@@ -95,7 +97,7 @@ class WardenProvider with ChangeNotifier {
       remarks: remarks,
     );
     // Reload requests after action
-    await loadWardenRequests();
+    await loadWardenRequests(_wardenId);
   }
 
   // Delete gate pass request
@@ -103,7 +105,7 @@ class WardenProvider with ChangeNotifier {
     try {
       await _service.deleteRequest(requestId);
       // Reload requests after deletion
-      await loadWardenRequests();
+      await loadWardenRequests(_wardenId);
     } catch (e) {
       debugPrint('Error deleting request: $e');
       rethrow;

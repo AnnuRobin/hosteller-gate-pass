@@ -26,6 +26,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late final TextEditingController _fullNameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _homeAddressController;
+  late final TextEditingController _hostelNameController;
+  late final TextEditingController _roomNoController;
 
   // Form state
   late String _selectedRole;
@@ -41,6 +43,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _fullNameController = TextEditingController(text: widget.user.fullName);
     _phoneController = TextEditingController(text: widget.user.phone ?? '');
     _homeAddressController = TextEditingController(text: widget.user.homeAddress ?? '');
+    _hostelNameController = TextEditingController(text: widget.user.hostelName ?? '');
+    _roomNoController = TextEditingController(text: widget.user.roomNo ?? '');
     
     _selectedRole = widget.user.role;
     _selectedDepartmentId = widget.user.departmentId;
@@ -331,6 +335,30 @@ class _EditUserScreenState extends State<EditUserScreen> {
         ),
         maxLines: 3,
       ),
+      const SizedBox(height: 16),
+
+      // Hostel Name
+      TextFormField(
+        controller: _hostelNameController,
+        decoration: const InputDecoration(
+          labelText: 'Hostel Name',
+          hintText: 'e.g. Hostel A',
+          prefixIcon: Icon(Icons.domain),
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // Room No
+      TextFormField(
+        controller: _roomNoController,
+        decoration: const InputDecoration(
+          labelText: 'Room Number',
+          hintText: 'e.g. 101',
+          prefixIcon: Icon(Icons.meeting_room),
+          border: OutlineInputBorder(),
+        ),
+      ),
       const SizedBox(height: 24),
     ];
   }
@@ -358,7 +386,23 @@ class _EditUserScreenState extends State<EditUserScreen> {
           setState(() => _selectedDepartmentId = value);
         },
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 16),
+
+      // Hostel Name (for wardens)
+      if (_selectedRole == 'warden') ...([
+        TextFormField(
+          controller: _hostelNameController,
+          decoration: const InputDecoration(
+            labelText: 'Hostel Name',
+            hintText: 'e.g. Hostel A',
+            prefixIcon: Icon(Icons.domain),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ]),
+
+      const SizedBox(height: 8),
     ];
   }
 
@@ -383,6 +427,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
         homeAddress: _homeAddressController.text.trim().isEmpty
             ? null
             : _homeAddressController.text.trim(),
+        hostelName: _hostelNameController.text.trim().isEmpty
+            ? null
+            : _hostelNameController.text.trim(),
+        roomNo: _selectedRole == 'student' && _roomNoController.text.trim().isNotEmpty
+            ? _roomNoController.text.trim()
+            : null,
       );
 
       if (mounted) {
@@ -488,6 +538,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _fullNameController.dispose();
     _phoneController.dispose();
     _homeAddressController.dispose();
+    _hostelNameController.dispose();
+    _roomNoController.dispose();
     super.dispose();
   }
 }

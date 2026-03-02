@@ -30,6 +30,7 @@ class GatePassModel {
   final String parentApprovalStatus; // 'pending', 'approved', 'rejected'
   final DateTime? parentApprovedAt;
   final String? parentRemarks;
+  final String? hostelName; // student's hostel name
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -65,6 +66,7 @@ class GatePassModel {
     this.parentApprovalStatus = 'pending',
     this.parentApprovedAt,
     this.parentRemarks,
+    this.hostelName,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -114,6 +116,7 @@ class GatePassModel {
           ? DateTime.parse(json['parent_approved_at'] as String)
           : null,
       parentRemarks: json['parent_remarks'] as String?,
+      hostelName: json['hostel_name'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -152,6 +155,7 @@ class GatePassModel {
       'parent_approval_status': parentApprovalStatus,
       'parent_approved_at': parentApprovedAt?.toIso8601String(),
       'parent_remarks': parentRemarks,
+      'hostel_name': hostelName,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

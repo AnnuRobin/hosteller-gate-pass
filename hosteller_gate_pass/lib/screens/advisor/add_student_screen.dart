@@ -18,6 +18,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _hostelNameController = TextEditingController();
+  final _roomNoController = TextEditingController();
   
   bool _isSubmitting = false;
 
@@ -99,6 +101,26 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 ),
                 obscureText: true,
               ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _hostelNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Hostel Name',
+                  hintText: 'e.g. Hostel A',
+                  prefixIcon: Icon(Icons.domain),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _roomNoController,
+                decoration: const InputDecoration(
+                  labelText: 'Room Number',
+                  hintText: 'e.g. 101',
+                  prefixIcon: Icon(Icons.meeting_room),
+                ),
+              ),
               const SizedBox(height: 32),
               
               SizedBox(
@@ -149,6 +171,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         password: password,
         departmentId: authProvider.userProfile!.departmentId!,
         classId: authProvider.userProfile!.classId!,
+        hostelName: _hostelNameController.text.trim().isEmpty
+            ? null
+            : _hostelNameController.text.trim(),
+        roomNo: _roomNoController.text.trim().isEmpty
+            ? null
+            : _roomNoController.text.trim(),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,6 +201,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _hostelNameController.dispose();
+    _roomNoController.dispose();
     super.dispose();
   }
 }

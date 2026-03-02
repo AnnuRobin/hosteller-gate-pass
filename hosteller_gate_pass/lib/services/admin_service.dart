@@ -55,6 +55,8 @@ class AdminService {
     int? semester,
     String? section,
     String? homeAddress,
+    String? hostelName,
+    String? roomNo,
   }) async {
     try {
       // Call Supabase RPC function to create user
@@ -69,6 +71,8 @@ class AdminService {
         'p_semester': semester,
         'p_section': section,
         'p_home_address': homeAddress,
+        'p_hostel_name': hostelName,
+        'p_room_no': roomNo,
       });
 
       print('User created successfully: $response');
@@ -89,6 +93,8 @@ class AdminService {
     int? semester,
     String? section,
     String? homeAddress,
+    String? hostelName,
+    String? roomNo,
   }) async {
     try {
       await _supabase.rpc('admin_update_user', params: {
@@ -101,6 +107,8 @@ class AdminService {
         'p_semester': semester,
         'p_section': section,
         'p_home_address': homeAddress,
+        'p_hostel_name': hostelName,
+        'p_room_no': roomNo,
       });
 
       print('User updated successfully');

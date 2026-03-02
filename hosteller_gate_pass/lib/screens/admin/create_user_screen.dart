@@ -27,6 +27,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _homeAddressController = TextEditingController();
+  final _hostelNameController = TextEditingController();
+  final _roomNoController = TextEditingController();
 
   // Form state
   late String _selectedRole;
@@ -361,6 +363,30 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         ),
         maxLines: 3,
       ),
+      const SizedBox(height: 16),
+
+      // Hostel Name
+      TextFormField(
+        controller: _hostelNameController,
+        decoration: const InputDecoration(
+          labelText: 'Hostel Name',
+          hintText: 'e.g. Hostel A',
+          prefixIcon: Icon(Icons.domain),
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // Room No
+      TextFormField(
+        controller: _roomNoController,
+        decoration: const InputDecoration(
+          labelText: 'Room Number',
+          hintText: 'e.g. 101',
+          prefixIcon: Icon(Icons.meeting_room),
+          border: OutlineInputBorder(),
+        ),
+      ),
       const SizedBox(height: 24),
     ];
   }
@@ -388,7 +414,23 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           setState(() => _selectedDepartmentId = value);
         },
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 16),
+
+      // Hostel Name (for wardens)
+      if (_selectedRole == 'warden') ...([
+        TextFormField(
+          controller: _hostelNameController,
+          decoration: const InputDecoration(
+            labelText: 'Hostel Name',
+            hintText: 'e.g. Hostel A',
+            prefixIcon: Icon(Icons.domain),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ]),
+
+      const SizedBox(height: 8),
     ];
   }
 
@@ -414,6 +456,12 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         homeAddress: _homeAddressController.text.trim().isEmpty
             ? null
             : _homeAddressController.text.trim(),
+        hostelName: _hostelNameController.text.trim().isEmpty
+            ? null
+            : _hostelNameController.text.trim(),
+        roomNo: _selectedRole == 'student' && _roomNoController.text.trim().isNotEmpty
+            ? _roomNoController.text.trim()
+            : null,
       );
 
       if (mounted) {
@@ -445,6 +493,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
     _fullNameController.dispose();
     _phoneController.dispose();
     _homeAddressController.dispose();
+    _hostelNameController.dispose();
+    _roomNoController.dispose();
     super.dispose();
   }
 }

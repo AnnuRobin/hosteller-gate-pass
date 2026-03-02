@@ -18,6 +18,8 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _hostelNameController;
+  late TextEditingController _roomNoController;
 
   bool _isSubmitting = false;
 
@@ -27,6 +29,8 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
     _nameController = TextEditingController(text: widget.student.fullName);
     _emailController = TextEditingController(text: widget.student.email);
     _phoneController = TextEditingController(text: widget.student.phone ?? '');
+    _hostelNameController = TextEditingController(text: widget.student.hostelName ?? '');
+    _roomNoController = TextEditingController(text: widget.student.roomNo ?? '');
   }
 
   @override
@@ -72,6 +76,24 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
                 ),
                 keyboardType: TextInputType.phone,
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _hostelNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Hostel Name',
+                  hintText: 'e.g. Hostel A',
+                  prefixIcon: Icon(Icons.domain),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _roomNoController,
+                decoration: const InputDecoration(
+                  labelText: 'Room Number',
+                  hintText: 'e.g. 101',
+                  prefixIcon: Icon(Icons.meeting_room),
+                ),
+              ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -106,6 +128,12 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
         studentId: widget.student.id,
         fullName: _nameController.text,
         phone: _phoneController.text,
+        hostelName: _hostelNameController.text.trim().isEmpty
+            ? null
+            : _hostelNameController.text.trim(),
+        roomNo: _roomNoController.text.trim().isEmpty
+            ? null
+            : _roomNoController.text.trim(),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -129,6 +157,8 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _hostelNameController.dispose();
+    _roomNoController.dispose();
     super.dispose();
   }
 }

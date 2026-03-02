@@ -9,6 +9,8 @@ class UserModel {
   final int? semester;
   final String? section;
   final String? homeAddress;
+  final String? hostelName;
+  final String? roomNo;
   final bool emailVerified;
   final DateTime? emailVerifiedAt;
   final DateTime createdAt;
@@ -24,6 +26,8 @@ class UserModel {
     this.semester,
     this.section,
     this.homeAddress,
+    this.hostelName,
+    this.roomNo,
     this.emailVerified = false,
     this.emailVerifiedAt,
     required this.createdAt,
@@ -41,6 +45,8 @@ class UserModel {
       semester: json['semester'] as int?,
       section: json['section'] as String?,
       homeAddress: json['home_address'] as String?,
+      hostelName: json['hostel_name'] as String?,
+      roomNo: json['room_no'] as String?,
       emailVerified: json['email_verified'] as bool? ?? false,
       emailVerifiedAt: json['email_verified_at'] != null
           ? DateTime.parse(json['email_verified_at'] as String)
@@ -61,6 +67,8 @@ class UserModel {
       'semester': semester,
       'section': section,
       'home_address': homeAddress,
+      'hostel_name': hostelName,
+      'room_no': roomNo,
       'email_verified': emailVerified,
       'email_verified_at': emailVerifiedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),

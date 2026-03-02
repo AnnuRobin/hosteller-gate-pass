@@ -41,6 +41,8 @@ class StudentManagementService {
     required String password,
     required String departmentId,
     required String classId,
+    String? hostelName,
+    String? roomNo,
   }) async {
     print('🔍 Starting addStudent...');
     print('  Email: $email');
@@ -58,6 +60,8 @@ class StudentManagementService {
         'p_phone': phone,
         'p_department_id': departmentId,
         'p_class_id': classId,
+        'p_hostel_name': hostelName,
+        'p_room_no': roomNo,
       });
 
       print('✅ Function response: $response');
@@ -96,6 +100,8 @@ class StudentManagementService {
     required String studentId,
     required String fullName,
     String? phone,
+    String? hostelName,
+    String? roomNo,
   }) async {
     print('🔍 Updating student: $studentId');
     
@@ -103,6 +109,8 @@ class StudentManagementService {
       await _supabase.from('users').update({
         'full_name': fullName,
         'phone': phone,
+        if (hostelName != null) 'hostel_name': hostelName,
+        if (roomNo != null) 'room_no': roomNo,
       }).eq('id', studentId);
       
       print('✅ Student updated successfully!');

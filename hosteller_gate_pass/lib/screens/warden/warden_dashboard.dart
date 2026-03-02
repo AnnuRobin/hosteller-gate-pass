@@ -25,8 +25,10 @@ class _WardenDashboardState extends State<WardenDashboard>
   }
 
   Future<void> _loadData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final wardenProvider = Provider.of<WardenProvider>(context, listen: false);
-    await wardenProvider.loadWardenRequests();
+    final wardenId = authProvider.userProfile?.id ?? '';
+    await wardenProvider.loadWardenRequests(wardenId);
   }
 
   @override

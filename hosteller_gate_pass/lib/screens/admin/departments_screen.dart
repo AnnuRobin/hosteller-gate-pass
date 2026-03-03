@@ -19,7 +19,11 @@ class _DepartmentsScreenState extends State<DepartmentsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDepartments();
+    // Delay fetch until after the first frame so the Supabase auth
+    // session is fully restored before making REST API calls.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDepartments();
+    });
   }
 
   Future<void> _loadDepartments() async {

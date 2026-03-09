@@ -10,7 +10,6 @@ import 'create_user_screen.dart';
 import 'edit_user_screen.dart';
 import 'audit_logs_screen.dart';
 import 'bulk_create_class_screen.dart';
-import 'manage_staff_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -29,7 +28,7 @@ class _AdminDashboardState extends State<AdminDashboard>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     // Rebuild when tab changes so the FAB visibility updates
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) setState(() {});
@@ -80,7 +79,6 @@ class _AdminDashboardState extends State<AdminDashboard>
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // Use staff auth provider if available, otherwise regular auth
               if (staffAuthProvider.isAuthenticated) {
                 await staffAuthProvider.logout();
               } else {
@@ -92,96 +90,63 @@ class _AdminDashboardState extends State<AdminDashboard>
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
-          isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.normal,
+          ),
           tabs: const [
             Tab(text: 'Overview'),
             Tab(text: 'Departments'),
-            Tab(text: 'Students'),
-            Tab(text: 'Staff'),
-            Tab(text: 'All Users'),
+            Tab(text: 'Warden'),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          // Welcome Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppConstants.primaryColor,
-                  AppConstants.secondaryColor,
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
               children: [
-                Text(
-                  'Welcome, ${authProvider.userProfile?.fullName ?? staffAuthProvider.userProfile?.fullName ?? "Admin"}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                _buildOverviewTab(
+                  authProvider,
+                  staffAuthProvider,
+                  studentCount,
+                  wardenCount,
+                  hodCount,
+                  advisorCount,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Total Users: ${_allUsers.length}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
+                const DepartmentsScreen(),
+                _buildUserList(_allUsers.where((u) => u.role == 'warden').toList()),
               ],
             ),
-          ),
-
-          // Tab Content
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildOverviewTab(
-                        studentCount,
-                        wardenCount,
-                        hodCount,
-                        advisorCount,
-                      ),
-                      const DepartmentsScreen(),
-                      _buildUserList(_allUsers
-                          .where((u) => u.role == 'student')
-                          .toList()),
-                      const ManageStaffScreen(),
-                      _buildUserList(_allUsers),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-      floatingActionButton: _tabController.index == 3
-          ? null // ManageStaffScreen has its own FAB-less add via Overview
-          : FloatingActionButton.extended(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateUserScreen(),
-                  ),
-                );
-                if (result == true) {
-                  _loadUsers();
-                }
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text('Add User'),
-              backgroundColor: AppConstants.primaryColor,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreateUserScreen(),
             ),
+          );
+          if (result == true) {
+            _loadUsers();
+          }
+        },
+        icon: const Icon(Icons.person_add),
+        label: const Text('Add User'),
+        backgroundColor: AppConstants.primaryColor,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 
   Widget _buildOverviewTab(
+    AuthProvider authProvider,
+    StaffAuthProvider staffAuthProvider,
     int studentCount,
     int wardenCount,
     int hodCount,
@@ -191,156 +156,316 @@ class _AdminDashboardState extends State<AdminDashboard>
       onRefresh: _loadUsers,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'User Statistics',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            // ── Welcome Header ──────────────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppConstants.primaryColor,
+                    AppConstants.deepNavyColor,
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome,',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    authProvider.userProfile?.fullName ??
+                        staffAuthProvider.userProfile?.fullName ??
+                        'System Administrator',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Total Users: ${_allUsers.length}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: [
-                _buildStatCard(
-                  'Students',
-                  studentCount.toString(),
-                  Icons.school,
-                  AppConstants.primaryColor,
-                ),
-                _buildStatCard(
-                  'Wardens',
-                  wardenCount.toString(),
-                  Icons.security,
-                  AppConstants.successColor,
-                ),
-                _buildStatCard(
-                  'HODs',
-                  hodCount.toString(),
-                  Icons.business_center,
-                  AppConstants.warningColor,
-                ),
-                _buildStatCard(
-                  'Advisors',
-                  advisorCount.toString(),
-                  Icons.person,
-                  AppConstants.secondaryColor,
-                ),
-              ],
-            ),
+
             const SizedBox(height: 24),
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+
+            // ── Statistics row ───────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: _buildCircleSection(
+                title: 'Quick Statistics',
+                icon: Icons.bar_chart_rounded,
+                buttons: [
+                  _buildCircularButton(
+                    label: 'Students',
+                    value: studentCount.toString(),
+                    icon: Icons.school_rounded,
+                    color: AppConstants.primaryColor,
+                    onTap: () => _tabController.animateTo(1),
+                  ),
+                  _buildCircularButton(
+                    label: 'Wardens',
+                    value: wardenCount.toString(),
+                    icon: Icons.security_rounded,
+                    color: AppConstants.successColor,
+                    onTap: () => _tabController.animateTo(2),
+                  ),
+                  _buildCircularButton(
+                    label: 'HODs',
+                    value: hodCount.toString(),
+                    icon: Icons.account_balance_rounded,
+                    color: AppConstants.warningColor,
+                    onTap: () => _tabController.animateTo(1),
+                  ),
+                  _buildCircularButton(
+                    label: 'Advisors',
+                    value: advisorCount.toString(),
+                    icon: Icons.person_pin_rounded,
+                    color: AppConstants.secondaryColor,
+                    onTap: () => _tabController.animateTo(1),
+                  ),
+                ],
               ),
             ),
+
             const SizedBox(height: 16),
-            _buildQuickActionCard(
-              'Bulk Create Class',
-              'Import students via CSV or manual entry',
-              Icons.upload_file,
-              () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BulkCreateClassScreen(),
+
+            // ── Actions row ──────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: _buildCircleSection(
+                title: 'Quick Actions',
+                icon: Icons.flash_on_rounded,
+                buttons: [
+                  _buildCircularButton(
+                    label: 'Create',
+                    icon: Icons.upload_file_rounded,
+                    color: AppConstants.primaryColor,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BulkCreateClassScreen(),
+                        ),
+                      );
+                      if (result == true) _loadUsers();
+                    },
                   ),
-                );
-                if (result == true) {
-                  _loadUsers();
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionCard(
-              'Manage Staff',
-              'Add or manage HODs, Wardens & Advisors',
-              Icons.badge,
-              () {
-                _tabController.animateTo(3);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionCard(
-              'User Management',
-              'Create, edit, or delete any user',
-              Icons.people,
-              () {
-                _tabController.animateTo(4);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionCard(
-              'View Audit Logs',
-              'See all admin actions',
-              Icons.history,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AuditLogsScreen(),
+                  _buildCircularButton(
+                    label: 'Logs',
+                    icon: Icons.history_edu_rounded,
+                    color: AppConstants.deepNavyColor,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AuditLogsScreen(),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                  _buildCircularButton(
+                    label: 'Depts',
+                    icon: Icons.account_balance_rounded,
+                    color: AppConstants.warningColor,
+                    onTap: () => _tabController.animateTo(1),
+                  ),
+                  _buildCircularButton(
+                    label: 'Wardens',
+                    icon: Icons.security_rounded,
+                    color: AppConstants.successColor,
+                    onTap: () => _tabController.animateTo(2),
+                  ),
+                ],
+              ),
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(
+  /// A titled card containing a 2×2 grid of equally sized circular buttons.
+  Widget _buildCircleSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> buttons,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Section header
+          Row(
+            children: [
+              Icon(icon, size: 16, color: AppConstants.primaryColor),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.deepNavyColor,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // 4 equally spaced circular buttons in a single row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: buttons,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A single circular icon button with an optional count/value label below.
+  Widget _buildCircularButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    String? value,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 30, color: color),
+          ),
+          const SizedBox(height: 6),
+          if (value != null)
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppConstants.deepNavyColor,
+              ),
+            ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildCircularStatButton(
     String title,
     String count,
     IconData icon,
     Color color,
+    VoidCallback onTap,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.2), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 32, color: color),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 12),
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+          const SizedBox(height: 12),
+          Text(
+            count,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppConstants.deepNavyColor,
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -349,27 +474,61 @@ class _AdminDashboardState extends State<AdminDashboard>
     String title,
     String subtitle,
     IconData icon,
+    Color color,
     VoidCallback onTap,
   ) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppConstants.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppConstants.primaryColor),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 2,
+      shadowColor: color.withValues(alpha: 0.15),
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Icon with colored background
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              // Title and subtitle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -428,7 +587,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getRoleColor(user.role).withOpacity(0.1),
+                      color: _getRoleColor(user.role).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

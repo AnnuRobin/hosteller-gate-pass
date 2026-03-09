@@ -24,6 +24,24 @@ class DepartmentService {
     }
   }
 
+  // Create a new department
+  Future<DepartmentModel> createDepartment({
+    required String name,
+    String? description,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('departments')
+          .insert({'name': name})
+          .select()
+          .single();
+      return DepartmentModel.fromJson(response);
+    } catch (e) {
+      print('Error creating department: $e');
+      rethrow;
+    }
+  }
+
   // Get department by ID
   Future<DepartmentModel?> getDepartmentById(String departmentId) async {
     try {
@@ -37,6 +55,25 @@ class DepartmentService {
     } catch (e) {
       print('Error fetching department: $e');
       return null;
+    }
+  }
+
+  // Get all staff (Advisors + HODs) in a department
+  Future<List<UserModel>> getStaffByDepartment(String departmentId) async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select()
+          .or('role.eq.advisor,role.eq.hod')
+          .eq('department_id', departmentId)
+          .order('full_name', ascending: true);
+
+      return (response as List)
+          .map((user) => UserModel.fromJson(user))
+          .toList();
+    } catch (e) {
+      print('Error fetching staff by department: $e');
+      rethrow;
     }
   }
 

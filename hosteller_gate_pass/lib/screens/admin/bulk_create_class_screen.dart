@@ -26,6 +26,9 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
   String? _selectedDepartmentId;
   int? _selectedSemester;
   String _selectedSection = 'A';
+  // Special sentinel value for 'Add New' options
+  static const String _kAddNewDept = '__add_new_dept__';
+  static const String _kAddNewAdvisor = '__add_new_advisor__';
   String? _selectedAdvisorId;
   String? _selectedHodId;
   String? _selectedWardenId;
@@ -151,13 +154,35 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
             prefixIcon: Icon(Icons.business),
             border: OutlineInputBorder(),
           ),
-          items: _departments.map((dept) {
-            return DropdownMenuItem(
-              value: dept.id,
-              child: Text(dept.name),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedDepartmentId = value),
+          items: [
+            ..._departments.map((dept) {
+              return DropdownMenuItem(
+                value: dept.id,
+                child: Text(dept.name),
+              );
+            }),
+            // Add New Department option
+            const DropdownMenuItem(
+              value: _kAddNewDept,
+              child: Row(
+                children: [
+                  Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Add New Department',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (value) async {
+            if (value == _kAddNewDept) {
+              await _showAddDepartmentDialog();
+            } else {
+              setState(() => _selectedDepartmentId = value);
+            }
+          },
         ),
         const SizedBox(height: 16),
 
@@ -213,13 +238,35 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
             prefixIcon: Icon(Icons.person),
             border: OutlineInputBorder(),
           ),
-          items: _advisors.map((advisor) {
-            return DropdownMenuItem(
-              value: advisor.id,
-              child: Text(advisor.fullName),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedAdvisorId = value),
+          items: [
+            ..._advisors.map((advisor) {
+              return DropdownMenuItem(
+                value: advisor.id,
+                child: Text(advisor.fullName),
+              );
+            }),
+            // Create New Advisor option
+            const DropdownMenuItem(
+              value: _kAddNewAdvisor,
+              child: Row(
+                children: [
+                  Icon(Icons.person_add_alt_1, color: Colors.blue, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Create New Advisor',
+                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (value) async {
+            if (value == _kAddNewAdvisor) {
+              await _showCreateAdvisorDialog();
+            } else {
+              setState(() => _selectedAdvisorId = value);
+            }
+          },
         ),
         const SizedBox(height: 16),
 
@@ -671,6 +718,220 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  /// Shows a dialog to add a new department inline.
+  Future<void> _showAddDepartmentDialog() async {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.business, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Add New Department'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Department Name *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.label),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.description),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Department name is required'), backgroundColor: Colors.red),
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Create', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        setState(() => _isLoading = true);
+        await _departmentService.createDepartment(
+          name: nameController.text.trim(),
+          description: descController.text.trim().isEmpty ? null : descController.text.trim(),
+        );
+        // Reload departments
+        final departments = await _departmentService.getAllDepartments();
+        setState(() {
+          _departments = departments;
+          _selectedDepartmentId = departments.isNotEmpty ? departments.last.id : null;
+          _isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Department "${nameController.text.trim()}" created!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        _showError('Failed to create department: $e');
+      }
+    }
+    nameController.dispose();
+    descController.dispose();
+  }
+
+  /// Shows a dialog to create a new Advisor user inline.
+  Future<void> _showCreateAdvisorDialog() async {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.person_add_alt_1, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Create New Advisor'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Full Name *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone (optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Default password: advisor123',
+                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty || emailController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Name and email are required'), backgroundColor: Colors.red),
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Create', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        setState(() => _isLoading = true);
+        await _adminService.createUser(
+          email: emailController.text.trim(),
+          password: 'advisor123',
+          fullName: nameController.text.trim(),
+          role: 'advisor',
+          phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
+          departmentId: _selectedDepartmentId,
+        );
+        // Reload users list and select the new advisor
+        final allUsers = await _adminService.getAllUsers();
+        final newAdvisor = allUsers.firstWhere(
+          (u) => u.email == emailController.text.trim(),
+          orElse: () => allUsers.where((u) => u.role == 'advisor').last,
+        );
+        setState(() {
+          _advisors = allUsers.where((u) => u.role == 'advisor').toList();
+          _selectedAdvisorId = newAdvisor.id;
+          _isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Advisor "${nameController.text.trim()}" created and selected!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        _showError('Failed to create advisor: $e');
+      }
+    }
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
   }
 
   void _downloadTemplate() {

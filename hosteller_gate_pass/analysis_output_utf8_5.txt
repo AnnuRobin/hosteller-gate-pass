@@ -1,0 +1,185 @@
+﻿Analyzing hosteller_gate_pass...                                
+
+   info - Don't invoke 'print' in production code - lib\providers\gate_pass_provider.dart:35:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\gate_pass_provider.dart:76:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\notification_provider.dart:21:7 - avoid_print
+warning - Unused import: '../models/parent_model.dart' - lib\providers\parent_provider.dart:5:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\providers\staff_auth_provider.dart:48:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\staff_auth_provider.dart:184:7 - avoid_print
+warning - Unused import: '../../models/department_model.dart' - lib\screens\admin\admin_dashboard.dart:6:8 - unused_import
+warning - Unused import: 'manage_staff_screen.dart' - lib\screens\admin\admin_dashboard.dart:14:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\admin_dashboard.dart:157:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\admin_dashboard.dart:158:27 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\admin\admin_dashboard.dart:161:27 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:177:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:195:43 - deprecated_member_use
+  error - Expected to find ')' - lib\screens\admin\admin_dashboard.dart:321:13 - expected_token
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:346:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:348:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:351:32 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\admin_dashboard.dart:362:20 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:394:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\admin_dashboard.dart:464:55 - deprecated_member_use
+warning - Unused import: 'dart:convert' - lib\screens\admin\audit_logs_screen.dart:5:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\audit_logs_screen.dart:80:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\audit_logs_screen.dart:81:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\admin\audit_logs_screen.dart:82:25 - prefer_const_literals_to_create_immutables
+warning - The value of the local variable 'adminEmail' isn't used - lib\screens\admin\audit_logs_screen.dart:183:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\batch_students_screen.dart:78:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\batch_students_screen.dart:79:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\admin\batch_students_screen.dart:80:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\batches_screen.dart:72:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\batches_screen.dart:73:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\admin\batches_screen.dart:74:25 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\batches_screen.dart:185:60 - deprecated_member_use
+   info - The private field _students could be 'final' - lib\screens\admin\bulk_create_class_screen.dart:38:30 - prefer_final_fields
+warning - The value of the local variable 'template' isn't used - lib\screens\admin\bulk_create_class_screen.dart:677:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\bulk_create_class_screen.dart:680:7 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\screens\admin\bulk_create_class_screen.dart:708:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\admin\create_user_screen.dart:53:7 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\create_user_screen.dart:74:56 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\create_user_screen.dart:79:29 - prefer_const_constructors
+warning - Unused import: 'batches_screen.dart' - lib\screens\admin\departments_screen.dart:6:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\departments_screen.dart:126:26 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\departments_screen.dart:205:52 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\admin\departments_screen.dart:208:24 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\screens\admin\edit_user_screen.dart:62:7 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\edit_user_screen.dart:90:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\manage_staff_screen.dart:313:46 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\add_student_screen.dart:182:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\add_student_screen.dart:186:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\add_student_screen.dart:188:28 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\advisor_dashboard.dart:78:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\advisor_dashboard.dart:79:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\advisor\advisor_dashboard.dart:80:25 - prefer_const_literals_to_create_immutables
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\bulk_upload_students_screen.dart:196:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\advisor\bulk_upload_students_screen.dart:229:11 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\bulk_upload_students_screen.dart:233:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\bulk_upload_students_screen.dart:243:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\bulk_upload_students_screen.dart:246:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\edit_student_screen.dart:139:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\edit_student_screen.dart:143:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\edit_student_screen.dart:145:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\manage_students_screen.dart:34:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\manage_students_screen.dart:198:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\manage_students_screen.dart:203:38 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:50:21 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\advisor\review_request_screen.dart:51:33 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:52:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:106:21 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\advisor\review_request_screen.dart:107:33 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:108:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:206:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:208:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:209:26 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\advisor\review_request_screen.dart:210:31 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\advisor\review_request_screen.dart:211:23 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\review_request_screen.dart:296:54 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\advisor\review_request_screen.dart:298:41 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:41:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:42:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:69:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:73:47 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:86:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:89:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:98:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:101:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:116:35 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:122:67 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:124:35 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:144:35 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:161:67 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\login_screen.dart:163:35 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:215:67 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\auth\login_screen.dart:249:28 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\hod\hod_dashboard.dart:77:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\hod\hod_dashboard.dart:78:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\hod\hod_dashboard.dart:79:25 - prefer_const_literals_to_create_immutables
+warning - Unused import: '../../utils/constants.dart' - lib\screens\student\create_request_screen.dart:7:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\create_request_screen.dart:155:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\create_request_screen.dart:216:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\create_request_screen.dart:220:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\create_request_screen.dart:222:28 - use_build_context_synchronously
+warning - Unused import: '../../utils/constants.dart' - lib\screens\student\edit_request_screen.dart:6:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\edit_request_screen.dart:138:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\edit_request_screen.dart:189:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\edit_request_screen.dart:193:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\student\edit_request_screen.dart:195:28 - use_build_context_synchronously
+warning - The value of the field '_selectedTab' isn't used - lib\screens\student\student_dashboard.dart:21:7 - unused_field
+   info - Use 'const' with the constructor to improve performance - lib\screens\student\student_dashboard.dart:115:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\student\student_dashboard.dart:116:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\student\student_dashboard.dart:117:25 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\student\student_dashboard.dart:207:35 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\warden\warden_dashboard.dart:69:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\warden\warden_dashboard.dart:70:25 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\warden\warden_dashboard.dart:71:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\warden\warden_request_detail_screen.dart:77:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\warden\warden_request_detail_screen.dart:78:19 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\warden\warden_request_detail_screen.dart:79:19 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\warden\warden_request_detail_screen.dart:124:22 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\warden\warden_request_detail_screen.dart:419:9 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:80:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:114:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:116:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:128:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:130:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:143:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:145:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:161:7 - avoid_print
+warning - The declaration '_logAdminAction' isn't referenced - lib\services\admin_service.dart:167:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:183:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:204:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\admin_service.dart:207:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:69:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:22:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:38:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:57:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:135:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:160:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:176:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\department_service.dart:197:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_otp_service.dart:28:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_otp_service.dart:46:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_otp_service.dart:64:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_otp_service.dart:107:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_otp_service.dart:127:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:21:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:37:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:54:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:74:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:100:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:117:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\parent_service.dart:134:7 - avoid_print
+warning - The value of the local variable 'staff' isn't used - lib\services\staff_auth_service.dart:41:13 - unused_local_variable
+warning - Unnecessary cast - lib\services\staff_auth_service.dart:41:22 - unnecessary_cast
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:66:7 - avoid_print
+warning - Unnecessary cast - lib\services\staff_auth_service.dart:83:28 - unnecessary_cast
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:86:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:103:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:119:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:135:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\staff_auth_service.dart:149:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:47:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:48:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:49:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:50:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:51:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:52:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:67:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:76:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:106:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:116:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:118:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:125:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:139:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:141:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:142:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:145:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\student_management_service.dart:147:7 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\request_card.dart:458:22 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\widgets\request_card.dart:561:15 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\widgets\request_card.dart:639:36 - use_build_context_synchronously
+

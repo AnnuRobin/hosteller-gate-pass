@@ -10,6 +10,7 @@ import 'create_user_screen.dart';
 import 'edit_user_screen.dart';
 import 'audit_logs_screen.dart';
 import 'bulk_create_class_screen.dart';
+import 'manage_staffs_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -291,10 +292,17 @@ class _AdminDashboardState extends State<AdminDashboard>
                     },
                   ),
                   _buildCircularButton(
-                    label: 'Depts',
-                    icon: Icons.account_balance_rounded,
+                    label: 'Manage Staffs',
+                    icon: Icons.people_alt_rounded,
                     color: AppConstants.warningColor,
-                    onTap: () => _tabController.animateTo(1),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ManageStaffsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildCircularButton(
                     label: 'Wardens',

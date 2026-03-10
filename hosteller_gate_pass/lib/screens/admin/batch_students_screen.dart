@@ -27,9 +27,7 @@ class _BatchStudentsScreenState extends State<BatchStudentsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadStudents();
-    });
+    _loadStudents();
   }
 
   Future<void> _loadStudents() async {

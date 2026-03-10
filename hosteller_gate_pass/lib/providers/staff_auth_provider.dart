@@ -34,37 +34,44 @@ class StaffAuthProvider with ChangeNotifier {
   }
 
   Future<void> _initialize() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      _currentUser = _authService.currentUser;
-
-      if (_currentUser != null) {
-        _userProfile = await _authService.getUserProfile(_currentUser!.id);
-        _staffCredentials = await _authService.getStaffCredentials(_currentUser!.id);
-      }
-    } catch (e) {
-      print('Initialization error: $e');
-      _errorMessage = 'Failed to initialize authentication';
-    }
-
-    _isLoading = false;
-    notifyListeners();
-
-    // Listen to auth state changes
-    _authService.authStateChanges.listen((data) async {
-      _currentUser = data.session?.user;
-      if (_currentUser != null) {
-        _userProfile = await _authService.getUserProfile(_currentUser!.id);
-        _staffCredentials = await _authService.getStaffCredentials(_currentUser!.id);
-      } else {
-        _userProfile = null;
-        _staffCredentials = null;
-        _sessionToken = null;
-        _sessionExpiresAt = null;
-      }
+    // Use addPostFrameCallback to avoid calling notifyListeners() during the
+    // first build phase, which causes "setState() called during build" errors.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _isLoading = true;
       notifyListeners();
+
+      try {
+        _currentUser = _authService.currentUser;
+
+        if (_currentUser != null) {
+          _userProfile = await _authService.getUserProfile(_currentUser!.id);
+          _staffCredentials =
+              await _authService.getStaffCredentials(_currentUser!.id);
+        }
+      } catch (e) {
+        print('Initialization error: $e');
+        _errorMessage = 'Failed to initialize authentication';
+      }
+
+      _isLoading = false;
+      notifyListeners();
+
+      // Listen to auth state changes
+      _authService.authStateChanges.listen((data) async {
+        _currentUser = data.session?.user;
+        if (_currentUser != null) {
+          _userProfile =
+              await _authService.getUserProfile(_currentUser!.id);
+          _staffCredentials =
+              await _authService.getStaffCredentials(_currentUser!.id);
+        } else {
+          _userProfile = null;
+          _staffCredentials = null;
+          _sessionToken = null;
+          _sessionExpiresAt = null;
+        }
+        notifyListeners();
+      });
     });
   }
 

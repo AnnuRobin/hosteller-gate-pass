@@ -374,14 +374,19 @@ class GatePassService {
     DateTime? exitTime,
     String? remarks,
   }) async {
-    await _supabase.from('gate_pass_requests').update({
+    final Map<String, dynamic> updateData = {
       'warden_status': approved ? 'approved' : 'rejected',
-      'status': approved ? 'warden_approved' : 'rejected',
+      'status': approved ? 'approved' : 'rejected',
       'warden_id': wardenId,
       'warden_approved_at': DateTime.now().toIso8601String(),
-      'exit_time': exitTime?.toIso8601String(),
-      'warden_remarks': remarks,
-    }).eq('id', requestId);
+    };
+    if (exitTime != null) updateData['exit_time'] = exitTime.toIso8601String();
+    if (remarks != null && remarks.isNotEmpty) updateData['warden_remarks'] = remarks;
+
+    await _supabase
+        .from('gate_pass_requests')
+        .update(updateData)
+        .eq('id', requestId);
 
     // Get request details for notification
     final request = await _supabase

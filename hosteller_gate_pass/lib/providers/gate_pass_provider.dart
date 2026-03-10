@@ -16,9 +16,9 @@ class GatePassProvider with ChangeNotifier {
   List<GatePassModel> get pendingRequests =>
       _requests.where((r) => r.status == 'pending').toList();
   
-  // Get approved requests
+  // Get approved requests (includes legacy warden_approved status)
   List<GatePassModel> get approvedRequests =>
-      _requests.where((r) => r.status == 'approved').toList();
+      _requests.where((r) => r.status == 'approved' || r.status == 'warden_approved').toList();
   
   // Get rejected requests
   List<GatePassModel> get rejectedRequests =>

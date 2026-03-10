@@ -7,7 +7,9 @@ import '../../providers/gate_pass_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/request_card.dart';
+import '../../models/gate_pass_model.dart';
 import 'create_request_screen.dart';
+import 'gate_pass_token_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({Key? key}) : super(key: key);
@@ -16,7 +18,8 @@ class StudentDashboard extends StatefulWidget {
   State<StudentDashboard> createState() => _StudentDashboardState();
 }
 
-class _StudentDashboardState extends State<StudentDashboard> with SingleTickerProviderStateMixin {
+class _StudentDashboardState extends State<StudentDashboard>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
 
@@ -34,12 +37,16 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
 
   Future<void> _loadData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final gatePassProvider = Provider.of<GatePassProvider>(context, listen: false);
-    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
-    
+    final gatePassProvider =
+        Provider.of<GatePassProvider>(context, listen: false);
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false);
+
     if (authProvider.currentUser != null) {
-      await gatePassProvider.loadStudentRequests(authProvider.currentUser!.id);
-      await notificationProvider.loadNotifications(authProvider.currentUser!.id);
+      await gatePassProvider
+          .loadStudentRequests(authProvider.currentUser!.id);
+      await notificationProvider
+          .loadNotifications(authProvider.currentUser!.id);
     }
   }
 
@@ -49,6 +56,14 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
     final gatePassProvider = Provider.of<GatePassProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(context);
 
+    // Find the most recent fully-approved pass for the banner
+    final activePass = gatePassProvider.requests
+        .where((r) => r.isFinallyApproved)
+        .toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final GatePassModel? latestActivePass =
+        activePass.isNotEmpty ? activePass.first : null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gate Pass'),
@@ -57,7 +72,8 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications),
-                onPressed: () => _showNotifications(context, notificationProvider),
+                onPressed: () =>
+                    _showNotifications(context, notificationProvider),
               ),
               if (notificationProvider.unreadCount > 0)
                 Positioned(
@@ -114,7 +130,10 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
+                colors: [
+                  AppConstants.primaryColor,
+                  AppConstants.secondaryColor
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -138,7 +157,11 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
               ],
             ),
           ),
-          
+
+          // ─── Active Gate Pass Banner ───────────────────────────
+          if (latestActivePass != null)
+            _buildActivePassBanner(context, latestActivePass),
+
           // Stats Cards
           Padding(
             padding: const EdgeInsets.all(16),
@@ -164,7 +187,7 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
               ],
             ),
           ),
-          
+
           // Request List
           Expanded(
             child: gatePassProvider.isLoading
@@ -191,6 +214,87 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
         icon: const Icon(Icons.add),
         label: const Text('New Request'),
         backgroundColor: AppConstants.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildActivePassBanner(BuildContext context, GatePassModel pass) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GatePassTokenScreen(request: pass),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF064E3B), Color(0xFF059669), Color(0xFF34D399)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF34D399).withOpacity(0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_rounded,
+                  color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ACTIVE GATE PASS',
+                    style: TextStyle(
+                      color: Color(0xFF064E3B),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    pass.destination,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${DateFormat('dd MMM').format(pass.fromDate)} → ${DateFormat('dd MMM yyyy').format(pass.toDate)}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+          ],
+        ),
       ),
     );
   }
@@ -263,7 +367,8 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
     );
   }
 
-  void _showNotifications(BuildContext context, NotificationProvider provider) {
+  void _showNotifications(
+      BuildContext context, NotificationProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -285,7 +390,8 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
                   children: [
                     const Text(
                       'Notifications',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     if (provider.unreadCount > 0)
                       TextButton(
@@ -309,10 +415,13 @@ class _StudentDashboardState extends State<StudentDashboard> with SingleTickerPr
                         controller: scrollController,
                         itemCount: provider.notifications.length,
                         itemBuilder: (context, index) {
-                          final notification = provider.notifications[index];
+                          final notification =
+                              provider.notifications[index];
                           return ListTile(
                             leading: Icon(
-                              notification.read ? Icons.mail_outline : Icons.mail,
+                              notification.read
+                                  ? Icons.mail_outline
+                                  : Icons.mail,
                               color: notification.read
                                   ? Colors.grey
                                   : AppConstants.primaryColor,

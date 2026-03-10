@@ -169,12 +169,22 @@ class GatePassModel {
         return 'Advisor Approved';
       case 'hod_approved':
         return 'HOD Approved';
+      case 'warden_approved':
+        return 'Warden Approved';
       case 'approved':
-        return 'Approved';
+        return 'Gate Pass Granted';
       case 'rejected':
         return 'Rejected';
       default:
         return 'Unknown';
     }
   }
+
+  /// True when all three approvals are complete and the gate pass token is valid.
+  /// Handles both new status='approved' and legacy status='warden_approved'.
+  bool get isFinallyApproved =>
+      (status == 'approved' || status == 'warden_approved') &&
+      advisorStatus == 'approved' &&
+      hodStatus == 'approved' &&
+      wardenStatus == 'approved';
 }

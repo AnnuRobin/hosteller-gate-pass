@@ -128,8 +128,9 @@ class StaffAuthService {
           .from('staff_credentials')
           .select()
           .eq('user_id', userId)
-          .single();
+          .maybeSingle(); // Returns null if no row found instead of throwing PGRST116
 
+      if (response == null) return null;
       return StaffCredentials.fromJson(response);
     } catch (e) {
       print('Error getting staff credentials: $e');

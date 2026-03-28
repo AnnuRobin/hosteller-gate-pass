@@ -79,13 +79,11 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
     }
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: const Text('Bulk Create Class'),
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -97,87 +95,29 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? _buildErrorState()
-              : Column(
-                  children: [
-                    // Gradient hero header
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppConstants.primaryColor, AppConstants.primaryColor.withOpacity(0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.25),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.group_add_rounded, color: Colors.white, size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Bulk Create Class',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Create a class and add multiple students',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+              : Stepper(
+                  currentStep: _currentStep,
+                  onStepContinue: _onStepContinue,
+                  onStepCancel: _onStepCancel,
+                  controlsBuilder: _buildStepControls,
+                  steps: [
+                    Step(
+                      title: const Text('Class Setup'),
+                      content: _buildClassSetupStep(),
+                      isActive: _currentStep >= 0,
+                      state: _currentStep > 0 ? StepState.complete : StepState.indexed,
                     ),
-                    Expanded(
-                      child: Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: ColorScheme.light(primary: AppConstants.primaryColor),
-                        ),
-                        child: Stepper(
-                          currentStep: _currentStep,
-                          onStepContinue: _onStepContinue,
-                          onStepCancel: _onStepCancel,
-                          controlsBuilder: _buildStepControls,
-                          steps: [
-                            Step(
-                              title: const Text('Class Setup'),
-                              content: _buildClassSetupStep(),
-                              isActive: _currentStep >= 0,
-                              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-                            ),
-                            Step(
-                              title: const Text('Add Students'),
-                              content: _buildAddStudentsStep(),
-                              isActive: _currentStep >= 1,
-                              state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-                            ),
-                            Step(
-                              title: const Text('Review & Create'),
-                              content: _buildReviewStep(),
-                              isActive: _currentStep >= 2,
-                              state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-                            ),
-                          ],
-                        ),
-                      ),
+                    Step(
+                      title: const Text('Add Students'),
+                      content: _buildAddStudentsStep(),
+                      isActive: _currentStep >= 1,
+                      state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                    ),
+                    Step(
+                      title: const Text('Review & Create'),
+                      content: _buildReviewStep(),
+                      isActive: _currentStep >= 2,
+                      state: _currentStep > 2 ? StepState.complete : StepState.indexed,
                     ),
                   ],
                 ),
@@ -202,132 +142,167 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
     );
   }
 
-Widget _buildClassSetupStep() {
+  Widget _buildClassSetupStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildCard(
-          sectionColor: const Color(0xFF3B82F6),
-          icon: Icons.apartment_rounded,
-          title: 'Class Settings',
-          children: [
-            DropdownButtonFormField<String>(
-              value: _selectedDepartmentId,
-              isExpanded: true,
-              decoration: _inputDecoration(
-                label: 'Department *',
-                icon: Icons.business_outlined,
-                accentColor: const Color(0xFF3B82F6),
+        // Department
+        DropdownButtonFormField<String>(
+          value: _selectedDepartmentId,
+          decoration: const InputDecoration(
+            labelText: 'Department *',
+            prefixIcon: Icon(Icons.business),
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            ..._departments.map((dept) {
+              return DropdownMenuItem(
+                value: dept.id,
+                child: Text(dept.name),
+              );
+            }),
+            // Add New Department option
+            const DropdownMenuItem(
+              value: _kAddNewDept,
+              child: Row(
+                children: [
+                  Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Add New Department',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              items: [
-                ..._departments.map((dept) => DropdownMenuItem(value: dept.id, child: Text(dept.name))),
-                const DropdownMenuItem(
-                  value: _kAddNewDept,
-                  child: Text('+ Add New Department', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                ),
-              ],
-              onChanged: (value) async {
-                if (value == _kAddNewDept) {
-                  await _showAddDepartmentDialog();
-                } else {
-                  setState(() => _selectedDepartmentId = value);
-                }
-              },
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: _selectedSemester,
-                    decoration: _inputDecoration(
-                      label: 'Semester *',
-                      icon: Icons.layers_outlined,
-                      accentColor: const Color(0xFF3B82F6),
-                    ),
-                    items: List.generate(8, (i) => DropdownMenuItem(value: i + 1, child: Text('Sem '))),
-                    onChanged: (value) => setState(() => _selectedSemester = value),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedSection,
-                    decoration: _inputDecoration(
-                      label: 'Section *',
-                      icon: Icons.class_outlined,
-                      accentColor: const Color(0xFF3B82F6),
-                    ),
-                    items: ['A', 'B', 'C', 'D', 'E'].map((s) => DropdownMenuItem(value: s, child: Text('Sec '))).toList(),
-                    onChanged: (value) => setState(() => _selectedSection = value!),
-                  ),
-                ),
-              ],
             ),
           ],
+          onChanged: (value) async {
+            if (value == _kAddNewDept) {
+              await _showAddDepartmentDialog();
+            } else {
+              setState(() => _selectedDepartmentId = value);
+            }
+          },
         ),
         const SizedBox(height: 16),
-        _buildCard(
-          sectionColor: const Color(0xFF8B5CF6),
-          icon: Icons.manage_accounts_rounded,
-          title: 'Assign Roles',
-          children: [
-            DropdownButtonFormField<String>(
-              value: _selectedAdvisorId,
-              isExpanded: true,
-              decoration: _inputDecoration(
-                label: 'Advisor',
-                icon: Icons.person_pin_rounded,
-                accentColor: const Color(0xFF8B5CF6),
+
+        // Semester
+        DropdownButtonFormField<int>(
+          value: _selectedSemester,
+          decoration: const InputDecoration(
+            labelText: 'Semester *',
+            prefixIcon: Icon(Icons.calendar_today),
+            border: OutlineInputBorder(),
+          ),
+          items: List.generate(8, (index) {
+            return DropdownMenuItem(
+              value: index + 1,
+              child: Text('Semester ${index + 1}'),
+            );
+          }),
+          onChanged: (value) => setState(() => _selectedSemester = value),
+        ),
+        const SizedBox(height: 16),
+
+        // Section
+        DropdownButtonFormField<String>(
+          value: _selectedSection,
+          decoration: const InputDecoration(
+            labelText: 'Section *',
+            prefixIcon: Icon(Icons.class_),
+            border: OutlineInputBorder(),
+          ),
+          items: ['A', 'B', 'C', 'D', 'E'].map((section) {
+            return DropdownMenuItem(
+              value: section,
+              child: Text('Section $section'),
+            );
+          }).toList(),
+          onChanged: (value) => setState(() => _selectedSection = value!),
+        ),
+        const SizedBox(height: 24),
+
+        const Divider(),
+        const SizedBox(height: 16),
+        const Text(
+          'Assign Roles',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+
+        // Advisor
+        DropdownButtonFormField<String>(
+          value: _selectedAdvisorId,
+          decoration: const InputDecoration(
+            labelText: 'Advisor',
+            prefixIcon: Icon(Icons.person),
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            ..._advisors.map((advisor) {
+              return DropdownMenuItem(
+                value: advisor.id,
+                child: Text(advisor.fullName),
+              );
+            }),
+            // Create New Advisor option
+            const DropdownMenuItem(
+              value: _kAddNewAdvisor,
+              child: Row(
+                children: [
+                  Icon(Icons.person_add_alt_1, color: Colors.blue, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Create New Advisor',
+                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              items: [
-                ..._advisors.map((advisor) => DropdownMenuItem(value: advisor.id, child: Text(advisor.fullName))),
-                const DropdownMenuItem(
-                  value: _kAddNewAdvisor,
-                  child: Text('+ Create New Advisor', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                ),
-              ],
-              onChanged: (value) async {
-                if (value == _kAddNewAdvisor) {
-                  await _showCreateAdvisorDialog();
-                } else {
-                  setState(() => _selectedAdvisorId = value);
-                }
-              },
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedHodId,
-                    isExpanded: true,
-                    decoration: _inputDecoration(
-                      label: 'HOD',
-                      icon: Icons.account_balance_rounded,
-                      accentColor: const Color(0xFF8B5CF6),
-                    ),
-                    items: _hods.map((hod) => DropdownMenuItem(value: hod.id, child: Text(hod.fullName, overflow: TextOverflow.ellipsis))).toList(),
-                    onChanged: (value) => setState(() => _selectedHodId = value),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedWardenId,
-                    isExpanded: true,
-                    decoration: _inputDecoration(
-                      label: 'Warden',
-                      icon: Icons.security_rounded,
-                      accentColor: const Color(0xFF8B5CF6),
-                    ),
-                    items: _wardens.map((w) => DropdownMenuItem(value: w.id, child: Text(w.fullName, overflow: TextOverflow.ellipsis))).toList(),
-                    onChanged: (value) => setState(() => _selectedWardenId = value),
-                  ),
-                ),
-              ],
             ),
           ],
+          onChanged: (value) async {
+            if (value == _kAddNewAdvisor) {
+              await _showCreateAdvisorDialog();
+            } else {
+              setState(() => _selectedAdvisorId = value);
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+
+        // HOD
+        DropdownButtonFormField<String>(
+          value: _selectedHodId,
+          decoration: const InputDecoration(
+            labelText: 'HOD',
+            prefixIcon: Icon(Icons.person_outline),
+            border: OutlineInputBorder(),
+          ),
+          items: _hods.map((hod) {
+            return DropdownMenuItem(
+              value: hod.id,
+              child: Text(hod.fullName),
+            );
+          }).toList(),
+          onChanged: (value) => setState(() => _selectedHodId = value),
+        ),
+        const SizedBox(height: 16),
+
+        // Warden
+        DropdownButtonFormField<String>(
+          value: _selectedWardenId,
+          decoration: const InputDecoration(
+            labelText: 'Warden',
+            prefixIcon: Icon(Icons.security),
+            border: OutlineInputBorder(),
+          ),
+          items: _wardens.map((warden) {
+            return DropdownMenuItem(
+              value: warden.id,
+              child: Text(warden.fullName),
+            );
+          }).toList(),
+          onChanged: (value) => setState(() => _selectedWardenId = value),
         ),
       ],
     );
@@ -465,76 +440,61 @@ Widget _buildClassSetupStep() {
     );
   }
 
-Widget _buildManualEntryTab() {
-    return _buildCard(
-      sectionColor: AppConstants.primaryColor,
-      icon: Icons.edit_note_rounded,
-      title: 'Manual Student Entry',
+  Widget _buildManualEntryTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _manualEmailController,
-                decoration: _inputDecoration(
-                  label: 'Email *',
-                  icon: Icons.email_outlined,
-                  accentColor: AppConstants.primaryColor,
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                controller: _manualNameController,
-                decoration: _inputDecoration(
-                  label: 'Full Name *',
-                  icon: Icons.badge_outlined,
-                  accentColor: AppConstants.primaryColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _manualPhoneController,
-                decoration: _inputDecoration(
-                  label: 'Phone',
-                  icon: Icons.phone_outlined,
-                  accentColor: AppConstants.primaryColor,
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                controller: _manualAddressController,
-                decoration: _inputDecoration(
-                  label: 'Home Address',
-                  icon: Icons.home_outlined,
-                  accentColor: AppConstants.primaryColor,
-                ),
-              ),
-            ),
-          ],
+        TextFormField(
+          controller: _manualEmailController,
+          decoration: const InputDecoration(
+            labelText: 'Email *',
+            prefixIcon: Icon(Icons.email),
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _manualNameController,
+          decoration: const InputDecoration(
+            labelText: 'Full Name *',
+            prefixIcon: Icon(Icons.person),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _manualPhoneController,
+          decoration: const InputDecoration(
+            labelText: 'Phone',
+            prefixIcon: Icon(Icons.phone),
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _manualAddressController,
+          decoration: const InputDecoration(
+            labelText: 'Home Address',
+            prefixIcon: Icon(Icons.home),
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
+
         ElevatedButton.icon(
           onPressed: _addManualStudent,
           icon: const Icon(Icons.add),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppConstants.successColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-          label: const Text('Add Student to List'),
+          label: const Text('Add Student'),
         ),
       ],
     );
@@ -604,65 +564,53 @@ Widget _buildManualEntryTab() {
     );
   }
 
-Widget _buildReviewStep() {
+  Widget _buildReviewStep() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _buildCard(
-                sectionColor: const Color(0xFF3B82F6),
-                icon: Icons.apartment_rounded,
-                title: 'Class Info',
-                children: [
-                  _buildReviewRow('Department', _getDepartmentName()),
-                  _buildReviewRow('Semester', _selectedSemester?.toString() ?? 'N/A'),
-                  _buildReviewRow('Section', _selectedSection),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildCard(
-                sectionColor: const Color(0xFF8B5CF6),
-                icon: Icons.manage_accounts_rounded,
-                title: 'Roles',
-                children: [
-                  _buildReviewRow('Advisor', _getAdvisorName()),
-                  _buildReviewRow('HOD', _getHodName()),
-                  _buildReviewRow('Warden', _getWardenName()),
-                ],
-              ),
-            ),
+        _buildReviewCard(
+          'Class Information',
+          [
+            _buildReviewRow('Department', _getDepartmentName()),
+            _buildReviewRow('Semester', _selectedSemester?.toString() ?? 'N/A'),
+            _buildReviewRow('Section', _selectedSection),
           ],
         ),
         const SizedBox(height: 16),
-        _buildCard(
-          sectionColor: AppConstants.successColor,
-          icon: Icons.groups_rounded,
-          title: 'Students Overview',
-          children: [
+
+        _buildReviewCard(
+          'Role Assignments',
+          [
+            _buildReviewRow('Advisor', _getAdvisorName()),
+            _buildReviewRow('HOD', _getHodName()),
+            _buildReviewRow('Warden', _getWardenName()),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        _buildReviewCard(
+          'Students',
+          [
             _buildReviewRow('Total Students', _students.length.toString()),
           ],
         ),
         const SizedBox(height: 24),
+
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.orange[200]!),
           ),
           child: Row(
             children: [
-              Icon(Icons.lock_reset_rounded, color: Colors.orange[700]),
+              Icon(Icons.info_outline, color: Colors.orange[700]),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'All students will receive the default password: student123.\\nThey can change it after their first login.',
-                  style: TextStyle(fontSize: 13, color: Colors.orange[800], fontWeight: FontWeight.w500),
+                  'All students will receive default password: student123\nThey can change it after first login.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
               ),
             ],
@@ -672,14 +620,36 @@ Widget _buildReviewStep() {
     );
   }
 
+  Widget _buildReviewCard(String title, List<Widget> children) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildReviewRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          Flexible(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), textAlign: TextAlign.right, overflow: TextOverflow.ellipsis)),
+          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -1116,100 +1086,6 @@ Widget _buildReviewStep() {
     return _wardens
         .firstWhere((w) => w.id == _selectedWardenId, orElse: () => UserModel(id: '', email: '', fullName: 'N/A', role: '', createdAt: DateTime.now()))
         .fullName;
-  }
-
-//  Helpers 
-
-  Widget _buildCard({
-    required Color sectionColor,
-    required IconData icon,
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: sectionColor.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border(
-                left: BorderSide(color: sectionColor, width: 3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, size: 16, color: sectionColor),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: sectionColor,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    required Color accentColor,
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(fontSize: 13, color: Colors.grey[600]),
-      prefixIcon: Icon(icon, size: 18, color: accentColor),
-      suffixIcon: suffix,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey[300]!),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey[300]!),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: accentColor, width: 1.8),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.red),
-      ),
-      filled: true,
-      fillColor: Colors.grey[50],
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      isDense: true,
-    );
   }
 
   @override

@@ -39,21 +39,8 @@ class AuthProvider with ChangeNotifier {
     });
   }
   
-  Future<void> signIn(String email, String password, {String? expectedRole}) async {
+  Future<void> signIn(String email, String password) async {
     await _authService.signIn(email: email, password: password);
-    
-    _currentUser = _authService.currentUser;
-    if (_currentUser != null) {
-      _userProfile = await _authService.getUserProfile(_currentUser!.id);
-      
-      if (expectedRole != null && _userProfile?.role != expectedRole) {
-        await _authService.signOut();
-        _currentUser = null;
-        _userProfile = null;
-        throw Exception('Invalid role selected for this account.');
-      }
-    }
-    notifyListeners();
   }
   
   Future<void> signUp({

@@ -16,15 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  String _selectedRole = AppConstants.roleStudent;
-
-  final List<Map<String, String>> _roles = [
-    {'value': AppConstants.roleStudent, 'label': 'Student'},
-    {'value': AppConstants.roleAdvisor, 'label': 'Advisor'},
-    {'value': AppConstants.roleHod, 'label': 'HOD'},
-    {'value': AppConstants.roleWarden, 'label': 'Warden'},
-    {'value': AppConstants.roleAdmin, 'label': 'Admin'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -115,35 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 32),
-                          // Role Dropdown
-                          DropdownButtonFormField<String>(
-                            value: _selectedRole,
-                            decoration: InputDecoration(
-                              labelText: 'Select Role',
-                              prefixIcon: Icon(Icons.person_outline, color: AppConstants.primaryColor),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: AppConstants.accentColor.withOpacity(0.1),
-                              floatingLabelStyle: TextStyle(color: AppConstants.primaryColor, fontWeight: FontWeight.bold),
-                            ),
-                            items: _roles.map((role) {
-                              return DropdownMenuItem<String>(
-                                value: role['value'],
-                                child: Text(role['label']!),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedRole = value;
-                                });
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 20),
                           // Email Field
                           TextFormField(
                             controller: _emailController,
@@ -282,7 +244,6 @@ class _LoginScreenState extends State<LoginScreen> {
       await authProvider.signIn(
         _emailController.text.trim(),
         _passwordController.text,
-        expectedRole: _selectedRole,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

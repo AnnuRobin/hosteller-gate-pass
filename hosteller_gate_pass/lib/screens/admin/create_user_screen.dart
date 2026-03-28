@@ -451,21 +451,11 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                   isExpanded: true,
                   decoration: _inputDecoration(
                       label: 'Department *', icon: Icons.business_outlined, accentColor: color),
-                  items: [
-                    ..._departments.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))),
-                    const DropdownMenuItem(
-                      value: 'NEW',
-                      child: Text('+ Create New Department', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                    ),
-                  ],
-                  onChanged: (v) {
-                    if (v == 'NEW') {
-                      _showCreateDepartmentDialog();
-                    } else {
-                      setState(() => _selectedDepartmentId = v);
-                    }
-                  },
-                  validator: (v) => v == null || v == 'NEW' ? 'Required' : null,
+                  items: _departments
+                      .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedDepartmentId = v),
+                  validator: (v) => v == null ? 'Required' : null,
                 ),
               ),
               const SizedBox(width: 12),
@@ -549,20 +539,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             isExpanded: true,
             decoration: _inputDecoration(
                 label: 'Department', icon: Icons.business_outlined, accentColor: _roleColor),
-            items: [
-              ..._departments.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))),
-              const DropdownMenuItem(
-                value: 'NEW',
-                child: Text('+ Create New Department', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-              ),
-            ],
-            onChanged: (v) {
-              if (v == 'NEW') {
-                _showCreateDepartmentDialog();
-              } else {
-                setState(() => _selectedDepartmentId = v);
-              }
-            },
+            items: _departments
+                .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis)))
+                .toList(),
+            onChanged: (v) => setState(() => _selectedDepartmentId = v),
           ),
           if (_selectedRole == 'warden') ...[
             const SizedBox(height: 14),
@@ -577,73 +557,6 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
       ),
       const SizedBox(height: 14),
     ];
-  }
-
-  Future<void> _showCreateDepartmentDialog() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create New Department'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Department Name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                Navigator.pop(context, controller.text.trim());
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _roleColor,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      setState(() => _isLoading = true);
-      try {
-        final newDept = await _departmentService.createDepartment(name: result);
-        await _loadDepartments();
-        setState(() {
-          _selectedDepartmentId = newDept.id;
-          _isLoading = false;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Department created successfully'),
-              backgroundColor: AppConstants.successColor,
-            ),
-          );
-        }
-      } catch (e) {
-        setState(() => _isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error creating department: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
   }
 
   Future<void> _createUser() async {

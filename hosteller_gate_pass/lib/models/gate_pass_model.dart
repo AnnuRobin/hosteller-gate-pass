@@ -31,6 +31,7 @@ class GatePassModel {
   final DateTime? parentApprovedAt;
   final String? parentRemarks;
   final String? hostelName; // student's hostel name
+  final bool isExpired; // true when pass has been used or toDate has passed
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -67,6 +68,7 @@ class GatePassModel {
     this.parentApprovedAt,
     this.parentRemarks,
     this.hostelName,
+    this.isExpired = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -117,6 +119,7 @@ class GatePassModel {
           : null,
       parentRemarks: json['parent_remarks'] as String?,
       hostelName: json['hostel_name'] as String?,
+      isExpired: json['is_expired'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -156,6 +159,7 @@ class GatePassModel {
       'parent_approved_at': parentApprovedAt?.toIso8601String(),
       'parent_remarks': parentRemarks,
       'hostel_name': hostelName,
+      'is_expired': isExpired,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -187,4 +191,17 @@ class GatePassModel {
       advisorStatus == 'approved' &&
       hodStatus == 'approved' &&
       wardenStatus == 'approved';
+
+  /// True if the pass is approved, not yet expired by flag, and toDate hasn't
+  /// passed and the student hasn't returned yet (no entryTime recorded).
+  bool get isCurrentlyActive =>
+      isFinallyApproved &&
+      !isExpired &&
+      entryTime == null &&
+      DateTime.now().isBefore(toDate);
+
+  /// Whether the pass should visually display as expired (informational only).
+  bool get isEffectivelyExpired =>
+      isFinallyApproved &&
+      (isExpired || entryTime != null || DateTime.now().isAfter(toDate));
 }

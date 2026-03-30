@@ -7,6 +7,7 @@ import '../../widgets/request_card.dart';
 import 'manage_students_screen.dart';
 import 'add_student_screen.dart';
 import 'bulk_upload_students_screen.dart';
+import '../shared/student_gate_pass_history_screen.dart';
 
 class AdvisorDashboard extends StatefulWidget {
   const AdvisorDashboard({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadData();
   }
 
@@ -50,12 +51,25 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
 
     final allRequests = gatePassProvider.requests;
 
+    final classId = authProvider.userProfile?.classId;
+    // Derive the human-readable class name from any loaded request
+    final className = allRequests.isNotEmpty
+        ? (allRequests.first.className ?? 'Class')
+        : 'Class';
+
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: const Text('Advisor Dashboard'),
+        backgroundColor: const Color(0xFF1E293B),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Advisor Dashboard',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               await authProvider.signOut();
             },
@@ -63,41 +77,62 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
+          indicatorColor: const Color(0xFF059669),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
           tabs: const [
-            Tab(text: 'Pending Requests'),
+            Tab(text: 'Pending'),
             Tab(text: 'All Requests'),
+            Tab(text: 'Students'),
           ],
         ),
       ),
       body: Column(
         children: [
+          // Stats header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppConstants.primaryColor,
-                  AppConstants.secondaryColor
-                ],
+                colors: [Color(0xFF1E3A5F), Color(0xFF2563EB)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  'Welcome, ${authProvider.userProfile?.fullName ?? "Advisor"}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome, ${authProvider.userProfile?.fullName ?? "Advisor"}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Pending Requests: ${pendingRequests.length}',
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Pending Requests: ${pendingRequests.length}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                _headerStatChip(
+                  '${allRequests.length}',
+                  'Total',
+                  Colors.white.withOpacity(0.25),
+                ),
+                const SizedBox(width: 8),
+                _headerStatChip(
+                  '${allRequests.where((r) => r.isFinallyApproved).length}',
+                  'Granted',
+                  const Color(0xFF10B981).withOpacity(0.4),
                 ),
               ],
             ),
@@ -105,11 +140,14 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
 
           // Quick Actions
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: _actionButton(
+                    icon: Icons.people,
+                    label: 'Manage Students',
+                    color: AppConstants.primaryColor,
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -117,16 +155,14 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
                             builder: (_) => const ManageStudentsScreen()),
                       );
                     },
-                    icon: const Icon(Icons.people),
-                    label: const Text('Manage Students'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: _actionButton(
+                    icon: Icons.person_add,
+                    label: 'Add Student',
+                    color: AppConstants.secondaryColor,
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -134,12 +170,6 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
                             builder: (_) => const AddStudentScreen()),
                       );
                     },
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Add Student'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.secondaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
                   ),
                 ),
               ],
@@ -148,12 +178,26 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
 
           Expanded(
             child: gatePassProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF2563EB)))
                 : TabBarView(
                     controller: _tabController,
                     children: [
                       _buildRequestList(pendingRequests, true),
                       _buildRequestList(allRequests, false),
+                      // Student history tab
+                      classId != null
+                          ? StudentGatePassHistoryScreen(
+                              scopeType: 'class',
+                              scopeId: classId,
+                              scopeName: className,
+                            )
+                          : const Center(
+                              child: Text(
+                                'Class not assigned',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
                     ],
                   ),
           ),
@@ -173,17 +217,63 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
     );
   }
 
+  Widget _headerStatChip(String value, String label, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
   Widget _buildRequestList(List requests, bool isPending) {
     if (requests.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
+            Icon(Icons.inbox, size: 80, color: Colors.grey[700]),
             const SizedBox(height: 16),
             Text(
               isPending ? 'No pending requests' : 'No requests found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 18, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -192,6 +282,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard>
 
     return RefreshIndicator(
       onRefresh: _loadData,
+      color: const Color(0xFF2563EB),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: requests.length,

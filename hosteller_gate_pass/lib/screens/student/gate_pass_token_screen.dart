@@ -1,5 +1,11 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../models/gate_pass_model.dart';
 
 class GatePassTokenScreen extends StatefulWidget {
@@ -18,6 +24,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
   late Animation<double> _stampScale;
   late Animation<double> _stampOpacity;
   late Animation<double> _glowAnim;
+  bool _isGeneratingPdf = false;
 
   @override
   void initState() {
@@ -43,7 +50,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     _glowAnim = Tween<double>(begin: 0.5, end: 1.0).animate(_glowController);
 
     Future.delayed(const Duration(milliseconds: 200), () {
-      _stampController.forward();
+      if (mounted) _stampController.forward();
     });
   }
 
@@ -54,9 +61,283 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     super.dispose();
   }
 
+  // ── QR payload ──────────────────────────────────────────────────────────────
+  String _buildQrPayload(GatePassModel req) {
+    return 'GATE-PASS|${req.id}|${req.studentName ?? ""}|'
+        '${DateFormat('dd-MM-yyyy').format(req.fromDate)}|'
+        '${DateFormat('dd-MM-yyyy').format(req.toDate)}|'
+        '${req.destination}|APPROVED';
+  }
+
+  // ── PDF generation ──────────────────────────────────────────────────────────
+  Future<Uint8List> _generatePdf(GatePassModel req) async {
+    final pdf = pw.Document();
+    final qrData = _buildQrPayload(req);
+
+    // Render QR as image bytes for PDF
+    final qrImageBytes = await QrPainter(
+      data: qrData,
+      version: QrVersions.auto,
+      eyeStyle: const QrEyeStyle(
+        eyeShape: QrEyeShape.square,
+        color: Color(0xFF064E3B),
+      ),
+      dataModuleStyle: const QrDataModuleStyle(
+        dataModuleShape: QrDataModuleShape.square,
+        color: Color(0xFF059669),
+      ),
+    ).toImageData(300, format: ui.ImageByteFormat.png);
+
+    final qrBytes = qrImageBytes?.buffer.asUint8List();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a5,
+        margin: const pw.EdgeInsets.all(24),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#059669'),
+                  borderRadius: pw.BorderRadius.circular(12),
+                ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'HOSTEL GATE PASS',
+                          style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'PASS #${req.id.substring(0, 8).toUpperCase()}',
+                          style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                        pw.SizedBox(height: 8),
+                        pw.Text(
+                          req.studentName ?? 'Student',
+                          style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 18,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.Text(
+                          '${req.hostelName ?? ""} | ${req.className ?? ""}',
+                          style: const pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (qrBytes != null)
+                      pw.Container(
+                        width: 100,
+                        height: 100,
+                        padding: const pw.EdgeInsets.all(6),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.white,
+                          borderRadius: pw.BorderRadius.circular(6),
+                        ),
+                        child: pw.Image(pw.MemoryImage(qrBytes)),
+                      ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Details
+              _pdfRow('Purpose', req.reason),
+              _pdfRow('Destination', req.destination),
+              _pdfRow('From', DateFormat('dd MMM yyyy').format(req.fromDate)),
+              _pdfRow('Return by', DateFormat('dd MMM yyyy').format(req.toDate)),
+              if (req.exitTime != null)
+                _pdfRow('Scheduled Exit',
+                    DateFormat('dd MMM yyyy, HH:mm').format(req.exitTime!)),
+              pw.SizedBox(height: 20),
+              pw.Divider(color: PdfColor.fromHex('#D1FAE5')),
+              pw.SizedBox(height: 12),
+
+              // Approval chain
+              pw.Text(
+                'APPROVAL CHAIN',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColor.fromHex('#059669'),
+                  letterSpacing: 1.5,
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              _pdfApproval('Class Advisor', req.advisorStatus,
+                  req.advisorApprovedAt, req.advisorRemarks),
+              _pdfApproval('Head of Department', req.hodStatus,
+                  req.hodApprovedAt, req.hodRemarks),
+              _pdfApproval(
+                  'Warden', req.wardenStatus, req.wardenApprovedAt, req.wardenRemarks),
+              pw.SizedBox(height: 20),
+
+              // Footer
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#D1FAE5'),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Center(
+                  child: pw.Text(
+                    req.isEffectivelyExpired
+                        ? '[!]  EXPIRED - FOR REFERENCE ONLY'
+                        : '[OK]  FULLY APPROVED - VALID GATE PASS',
+                    style: pw.TextStyle(
+                      color: req.isEffectivelyExpired
+                          ? PdfColor.fromHex('#B45309')
+                          : PdfColor.fromHex('#065F46'),
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  pw.Widget _pdfRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 90,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(
+                fontSize: 9,
+                color: PdfColor.fromHex('#6B7280'),
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(
+              value,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfApproval(
+      String role, String status, DateTime? at, String? remarks) {
+    final isApproved = status == 'approved';
+    final isRejected = status == 'rejected';
+    final statusText =
+        isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending';
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Row(
+        children: [
+          pw.Text(
+            isApproved ? '[OK]' : isRejected ? '[X]' : '[ ]',
+            style: pw.TextStyle(
+              fontSize: 11,
+              color: isApproved
+                  ? PdfColor.fromHex('#059669')
+                  : isRejected
+                      ? PdfColors.red
+                      : PdfColors.grey,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(width: 8),
+          pw.Text(
+            role,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(width: 8),
+          pw.Text(
+            statusText,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: isApproved
+                  ? PdfColor.fromHex('#059669')
+                  : isRejected
+                      ? PdfColors.red
+                      : PdfColors.grey,
+            ),
+          ),
+          if (at != null) ...[
+            pw.SizedBox(width: 8),
+            pw.Text(
+              DateFormat('dd MMM, HH:mm').format(at),
+              style: const pw.TextStyle(
+                fontSize: 8,
+                color: PdfColors.grey,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _downloadPass() async {
+    if (_isGeneratingPdf) return;
+    setState(() => _isGeneratingPdf = true);
+    try {
+      final bytes = await _generatePdf(widget.request);
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename:
+            'GatePass_${widget.request.id.substring(0, 8).toUpperCase()}.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not generate PDF: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGeneratingPdf = false);
+    }
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final req = widget.request;
+    final expired = req.isEffectivelyExpired;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -68,16 +349,38 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Download PDF',
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child:
+                        CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_rounded, color: Colors.white),
+            onPressed: _isGeneratingPdf ? null : _downloadPass,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           children: [
-            _buildTokenCard(req),
-            const SizedBox(height: 24),
+            // Expired info banner (informational, not blocking)
+            if (expired) _buildExpiredBanner(req),
+            if (expired) const SizedBox(height: 14),
+            _buildTokenCard(req, expired),
+            const SizedBox(height: 20),
+            _buildQrSection(req),
+            const SizedBox(height: 20),
             _buildApprovalChain(req),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             _buildTravelDetails(req),
+            const SizedBox(height: 24),
+            // Download button at the bottom
+            _buildDownloadButton(),
             const SizedBox(height: 32),
           ],
         ),
@@ -85,23 +388,84 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     );
   }
 
-  Widget _buildTokenCard(GatePassModel req) {
+  // ── Expired banner ──────────────────────────────────────────────────────────
+  Widget _buildExpiredBanner(GatePassModel req) {
+    String reason;
+    if (req.entryTime != null) {
+      reason =
+          'Student returned on ${DateFormat('dd MMM yyyy, HH:mm').format(req.entryTime!)}';
+    } else if (req.isExpired) {
+      reason = 'Marked as used / returned';
+    } else {
+      reason =
+          'Return date passed on ${DateFormat('dd MMM yyyy').format(req.toDate)}';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF78350F).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFBBF24), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: Color(0xFFFBBF24), size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'EXPIRED PASS — INFORMATIONAL',
+                  style: TextStyle(
+                    color: Color(0xFFFBBF24),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  reason,
+                  style: const TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Token card ──────────────────────────────────────────────────────────────
+  Widget _buildTokenCard(GatePassModel req, bool expired) {
+    final cardColors = expired
+        ? const [Color(0xFF374151), Color(0xFF4B5563), Color(0xFF6B7280)]
+        : const [Color(0xFF064E3B), Color(0xFF059669), Color(0xFF34D399)];
+
     return AnimatedBuilder(
       animation: _glowAnim,
       builder: (context, child) {
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF064E3B), Color(0xFF059669), Color(0xFF34D399)],
+              colors: cardColors,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF34D399).withOpacity(0.3 * _glowAnim.value),
-                blurRadius: 32 * _glowAnim.value,
-                spreadRadius: 4,
+                color: (expired ? const Color(0xFFFBBF24) : const Color(0xFF34D399))
+                    .withOpacity(0.25 * _glowAnim.value),
+                blurRadius: 28 * _glowAnim.value,
+                spreadRadius: 3,
               ),
             ],
           ),
@@ -120,10 +484,12 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'HOSTEL GATE PASS',
+                    Text(
+                      expired ? 'EXPIRED GATE PASS' : 'HOSTEL GATE PASS',
                       style: TextStyle(
-                        color: Color(0xFF064E3B),
+                        color: expired
+                            ? const Color(0xFFFDE68A)
+                            : const Color(0xFF064E3B),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2,
@@ -158,8 +524,10 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
                       border: Border.all(color: Colors.white, width: 3),
                       color: Colors.white.withOpacity(0.15),
                     ),
-                    child: const Icon(
-                      Icons.verified_rounded,
+                    child: Icon(
+                      expired
+                          ? Icons.schedule_rounded
+                          : Icons.verified_rounded,
                       color: Colors.white,
                       size: 40,
                     ),
@@ -209,7 +577,6 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
               ),
             ),
             const SizedBox(height: 16),
-            // Reason
             _buildTokenField('PURPOSE', req.reason),
             const SizedBox(height: 12),
             _buildTokenField('DESTINATION', req.destination),
@@ -238,7 +605,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
               ),
             ],
             const SizedBox(height: 20),
-            // ALL APPROVED banner
+            // Status banner
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -246,17 +613,28 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded,
-                      color: Color(0xFF10B981), size: 20),
-                  SizedBox(width: 8),
+                  Icon(
+                    expired
+                        ? Icons.history_toggle_off_rounded
+                        : Icons.check_circle_rounded,
+                    color: expired
+                        ? const Color(0xFFD97706)
+                        : const Color(0xFF10B981),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    'FULLY APPROVED — VALID GATE PASS',
+                    expired
+                        ? 'EXPIRED — FOR REFERENCE ONLY'
+                        : 'FULLY APPROVED — VALID GATE PASS',
                     style: TextStyle(
-                      color: Color(0xFF059669),
-                      fontSize: 12,
+                      color: expired
+                          ? const Color(0xFFD97706)
+                          : const Color(0xFF059669),
+                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1,
                     ),
@@ -296,6 +674,62 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     );
   }
 
+  // ── QR code section ──────────────────────────────────────────────────────────
+  Widget _buildQrSection(GatePassModel req) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'SCAN QR TO VERIFY',
+            style: TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: QrImageView(
+              data: _buildQrPayload(req),
+              version: QrVersions.auto,
+              size: 180,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Color(0xFF064E3B),
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: Color(0xFF059669),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Pass ID: ${req.id.substring(0, 8).toUpperCase()}',
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Approval chain ──────────────────────────────────────────────────────────
   Widget _buildApprovalChain(GatePassModel req) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -365,7 +799,6 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Step icon + connector
         Column(
           children: [
             Container(
@@ -398,7 +831,6 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
           ],
         ),
         const SizedBox(width: 14),
-        // Text info
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
@@ -468,6 +900,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     );
   }
 
+  // ── Travel details ──────────────────────────────────────────────────────────
   Widget _buildTravelDetails(GatePassModel req) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -549,6 +982,41 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Download button ─────────────────────────────────────────────────────────
+  Widget _buildDownloadButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _isGeneratingPdf ? null : _downloadPass,
+        icon: _isGeneratingPdf
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.download_rounded),
+        label: Text(
+          _isGeneratingPdf ? 'Generating PDF...' : 'Download Gate Pass (PDF)',
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF059669),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }

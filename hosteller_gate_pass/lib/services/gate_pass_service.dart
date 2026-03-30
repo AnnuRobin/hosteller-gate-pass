@@ -407,13 +407,14 @@ class GatePassService {
     });
   }
 
-  // Record entry time when student returns
+  // Record entry time when student returns — also marks the pass as expired
   Future<void> recordEntryTime({
     required String requestId,
     required DateTime entryTime,
   }) async {
     await _supabase.from('gate_pass_requests').update({
       'entry_time': entryTime.toIso8601String(),
+      'is_expired': true,
     }).eq('id', requestId);
   }
 
@@ -443,5 +444,93 @@ class GatePassService {
       'message': 'Your gate pass request final status is: $finalStatus',
       'type': 'status_updated',
     });
+  }
+
+  // Manually mark a gate pass as expired (e.g. after to_date passes)
+  Future<void> markAsExpired(String requestId) async {
+    await _supabase.from('gate_pass_requests').update({
+      'is_expired': true,
+    }).eq('id', requestId);
+  }
+
+  // Get all gate passes for a specific student (for HOD/Advisor history)
+  Future<List<GatePassModel>> getStudentPassHistory(String studentId) async {
+    final response = await _supabase
+        .from('gate_pass_requests')
+        .select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''')
+        .eq('student_id', studentId)
+        .order('created_at', ascending: false);
+
+    return (response as List).map<GatePassModel>((json) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+      return GatePassModel.fromJson(json);
+    }).toList();
+  }
+
+  // Get all passes for every student in a department (for HOD history view)
+  // Returns a map of studentId -> list of passes
+  Future<Map<String, List<GatePassModel>>> getStudentHistoryForDepartment(
+      String departmentId) async {
+    final response = await _supabase
+        .from('gate_pass_requests')
+        .select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''')
+        .eq('department_id', departmentId)
+        .order('created_at', ascending: false);
+
+    final Map<String, List<GatePassModel>> grouped = {};
+    for (final json in (response as List)) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+      final model = GatePassModel.fromJson(json);
+      grouped.putIfAbsent(model.studentId, () => []).add(model);
+    }
+    return grouped;
+  }
+
+  // Get all passes for every student in a class (for Advisor history view)
+  Future<Map<String, List<GatePassModel>>> getStudentHistoryForClass(
+      String classId) async {
+    final response = await _supabase
+        .from('gate_pass_requests')
+        .select('''
+          *,
+          users:student_id(full_name),
+          classes:class_id(name),
+          departments:department_id(name)
+        ''')
+        .eq('class_id', classId)
+        .order('created_at', ascending: false);
+
+    final Map<String, List<GatePassModel>> grouped = {};
+    for (final json in (response as List)) {
+      final studentData = json['users'];
+      final classData = json['classes'];
+      final deptData = json['departments'];
+      json['student_name'] = studentData?['full_name'];
+      json['class_name'] = classData?['name'];
+      json['department_name'] = deptData?['name'];
+      final model = GatePassModel.fromJson(json);
+      grouped.putIfAbsent(model.studentId, () => []).add(model);
+    }
+    return grouped;
   }
 }

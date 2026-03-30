@@ -56,9 +56,9 @@ class _StudentDashboardState extends State<StudentDashboard>
     final gatePassProvider = Provider.of<GatePassProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(context);
 
-    // Find the most recent fully-approved pass for the banner
+    // Find the most recent active (non-expired, within date range) pass for the banner
     final activePass = gatePassProvider.requests
-        .where((r) => r.isFinallyApproved)
+        .where((r) => r.isCurrentlyActive)
         .toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     final GatePassModel? latestActivePass =

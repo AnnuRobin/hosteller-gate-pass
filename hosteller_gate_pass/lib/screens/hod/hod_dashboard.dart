@@ -46,7 +46,6 @@ class _HodDashboardState extends State<HodDashboard>
 
     // All requests in the department
     final allRequests = gatePassProvider.requests;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('HOD Dashboard'),

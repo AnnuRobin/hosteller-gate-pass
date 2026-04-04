@@ -24,7 +24,7 @@ dependencies:
   csv: ^6.0.0
   
   # Notifications
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^17.0.0
 
   # QR Code + PDF export for gate pass download
   qr_flutter: ^4.1.0

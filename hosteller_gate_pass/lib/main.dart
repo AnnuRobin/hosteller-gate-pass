@@ -5,6 +5,7 @@ import 'providers/auth_provider.dart';
 import 'providers/staff_auth_provider.dart';
 import 'providers/gate_pass_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/theme_provider.dart';
 import 'providers/warden_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/student/student_dashboard.dart';
@@ -32,40 +33,80 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GatePassProvider()),
         ChangeNotifierProvider(create: (_) => WardenProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'Hosteller Gate Pass',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primaryColor: AppConstants.primaryColor,
-          scaffoldBackgroundColor: AppConstants.backgroundColor,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppConstants.primaryColor,
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: AppConstants.primaryColor,
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Hosteller Gate Pass',
+            debugShowCheckedModeBanner: false,
+            themeMode: themeProvider.themeMode,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              primaryColor: AppConstants.primaryColor,
+              scaffoldBackgroundColor: AppConstants.backgroundColor,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppConstants.primaryColor,
+                brightness: Brightness.light,
+              ),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: AppConstants.primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppConstants.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: AppConstants.primaryColor,
+              scaffoldBackgroundColor: const Color(0xFF0F172A),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppConstants.primaryColor,
+                brightness: Brightness.dark,
+              ),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Color(0xFF1E293B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              cardColor: const Color(0xFF1E293B),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppConstants.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF1E293B),
+              ),
             ),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
-        home: const AuthWrapper(),
+            home: const AuthWrapper(),
+          );
+        },
       ),
     );
   }

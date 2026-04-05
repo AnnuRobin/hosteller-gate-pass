@@ -47,15 +47,6 @@ class _HodDashboardState extends State<HodDashboard>
 
     // All requests in the department
     final allRequests = gatePassProvider.requests;
-
-
-    final departmentId = authProvider.userProfile?.departmentId;
-    // Derive the human-readable department name from any loaded request
-    final departmentName = allRequests.isNotEmpty
-        ? (allRequests.first.departmentName ?? 'Department')
-        : 'Department';
-
-
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(

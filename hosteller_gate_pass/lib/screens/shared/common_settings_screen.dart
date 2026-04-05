@@ -34,15 +34,25 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text('App Theme', style: TextStyle(fontWeight: FontWeight.w600)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Text('App Theme',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
               contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _themeOption(context, themeProvider, ThemeMode.light, 'Light', Icons.light_mode_outlined, setDialogState),
-                  _themeOption(context, themeProvider, ThemeMode.dark, 'Dark', Icons.dark_mode_outlined, setDialogState),
-                  _themeOption(context, themeProvider, ThemeMode.system, 'System Default', Icons.brightness_auto_outlined, setDialogState),
+                  _themeOption(context, themeProvider, ThemeMode.light, 'Light',
+                      Icons.light_mode_outlined, setDialogState),
+                  _themeOption(context, themeProvider, ThemeMode.dark, 'Dark',
+                      Icons.dark_mode_outlined, setDialogState),
+                  _themeOption(
+                      context,
+                      themeProvider,
+                      ThemeMode.system,
+                      'System Default',
+                      Icons.brightness_auto_outlined,
+                      setDialogState),
                 ],
               ),
             );
@@ -52,7 +62,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
     );
   }
 
-  Widget _themeOption(BuildContext context, ThemeProvider themeProvider, ThemeMode mode, String label, IconData icon, StateSetter setDialogState) {
+  Widget _themeOption(BuildContext context, ThemeProvider themeProvider,
+      ThemeMode mode, String label, IconData icon, StateSetter setDialogState) {
     final isSelected = themeProvider.themeMode == mode;
     final primaryColor = Theme.of(context).colorScheme.primary;
     return InkWell(
@@ -67,7 +78,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          color:
+              isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? primaryColor : Colors.transparent,
@@ -76,11 +88,19 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? primaryColor : Theme.of(context).iconTheme.color?.withOpacity(0.6), size: 20),
+            Icon(icon,
+                color: isSelected
+                    ? primaryColor
+                    : Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                size: 20),
             const SizedBox(width: 12),
-            Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+            Text(label,
+                style: TextStyle(
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal)),
             const Spacer(),
-            if (isSelected) Icon(Icons.check_circle, color: primaryColor, size: 18),
+            if (isSelected)
+              Icon(Icons.check_circle, color: primaryColor, size: 18),
           ],
         ),
       ),
@@ -92,12 +112,14 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Language', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text('Language',
+            style: TextStyle(fontWeight: FontWeight.w600)),
         contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _languageOption(context, 'English', '🇬🇧', () => Navigator.pop(context)),
+            _languageOption(
+                context, 'English', '🇬🇧', () => Navigator.pop(context)),
             _languageOption(context, 'Malayalam', '🇮🇳', () {
               Navigator.pop(context);
               _showSnackBar('Malayalam language support coming soon!');
@@ -112,7 +134,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
     );
   }
 
-  Widget _languageOption(BuildContext context, String label, String flag, VoidCallback onTap) {
+  Widget _languageOption(
+      BuildContext context, String label, String flag, VoidCallback onTap) {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: onTap,
@@ -155,14 +178,15 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
     final accentColor = const Color(0xFF5B61DB);
 
     final cardColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
-    final cardBorderColor = isDark ? const Color(0xFF2E2E3E) : Colors.grey.shade200;
+    final cardBorderColor =
+        isDark ? const Color(0xFF2E2E3E) : Colors.grey.shade200;
     final subtitleColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
-    final sectionHeaderColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+    final sectionHeaderColor =
+        isDark ? Colors.grey.shade400 : Colors.grey.shade600;
     final titleColor = isDark ? Colors.white : primaryColor;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121C) : const Color(0xFFF5F7FA),
-      body: SingleChildScrollView(
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +226,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
                   icon: Icons.palette_outlined,
                   iconColor: accentColor,
                   title: 'App Theme',
-                  trailing: _badge(themeProvider.themeName, subtitleColor, isDark),
+                  trailing:
+                      _badge(themeProvider.themeName, subtitleColor, isDark),
                   onTap: _showThemeDialog,
                   theme: theme,
                 ),
@@ -236,7 +261,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
                   accentColor: accentColor,
                   onChanged: (v) {
                     setState(() => _pushNotifications = v);
-                    _showSnackBar('Push notifications ${v ? 'enabled' : 'disabled'}');
+                    _showSnackBar(
+                        'Push notifications ${v ? 'enabled' : 'disabled'}');
                   },
                   theme: theme,
                   isDark: isDark,
@@ -251,7 +277,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
                   accentColor: accentColor,
                   onChanged: (v) {
                     setState(() => _emailNotifications = v);
-                    _showSnackBar('Email notifications ${v ? 'enabled' : 'disabled'}');
+                    _showSnackBar(
+                        'Email notifications ${v ? 'enabled' : 'disabled'}');
                   },
                   theme: theme,
                   isDark: isDark,
@@ -288,7 +315,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
                   accentColor: accentColor,
                   onChanged: (v) {
                     setState(() => _locationServices = v);
-                    _showSnackBar('Location services ${v ? 'enabled' : 'disabled'}');
+                    _showSnackBar(
+                        'Location services ${v ? 'enabled' : 'disabled'}');
                   },
                   theme: theme,
                   isDark: isDark,
@@ -392,19 +420,26 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(9)),
+              decoration: BoxDecoration(
+                  color: iconBg, borderRadius: BorderRadius.circular(9)),
               child: Icon(icon, color: iconColor, size: 18),
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textColor)),
+              child: Text(title,
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: textColor)),
             ),
             if (trailing != null) trailing,
             if (onTap != null && trailing == null)
-              Icon(Icons.chevron_right_rounded, color: theme.iconTheme.color?.withOpacity(0.4), size: 20),
+              Icon(Icons.chevron_right_rounded,
+                  color: theme.iconTheme.color?.withOpacity(0.4), size: 20),
             if (onTap != null && trailing != null) ...[
               const SizedBox(width: 6),
-              Icon(Icons.chevron_right_rounded, color: theme.iconTheme.color?.withOpacity(0.4), size: 20),
+              Icon(Icons.chevron_right_rounded,
+                  color: theme.iconTheme.color?.withOpacity(0.4), size: 20),
             ],
           ],
         ),
@@ -424,7 +459,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
     required bool isDark,
   }) {
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
-    final subtitleTextColor = isDark ? Colors.grey.shade500 : Colors.grey.shade500;
+    final subtitleTextColor =
+        isDark ? Colors.grey.shade500 : Colors.grey.shade500;
     final iconBg = iconColor.withOpacity(0.12);
 
     return Padding(
@@ -434,7 +470,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(9)),
+            decoration: BoxDecoration(
+                color: iconBg, borderRadius: BorderRadius.circular(9)),
             child: Icon(icon, color: iconColor, size: 18),
           ),
           const SizedBox(width: 14),
@@ -442,9 +479,14 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textColor)),
+                Text(title,
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: textColor)),
                 const SizedBox(height: 1),
-                Text(subtitle, style: TextStyle(fontSize: 12, color: subtitleTextColor)),
+                Text(subtitle,
+                    style: TextStyle(fontSize: 12, color: subtitleTextColor)),
               ],
             ),
           ),
@@ -455,7 +497,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
               activeColor: Colors.white,
               activeTrackColor: accentColor,
               inactiveThumbColor: Colors.white,
-              inactiveTrackColor: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+              inactiveTrackColor:
+                  isDark ? Colors.grey.shade700 : Colors.grey.shade300,
               onChanged: onChanged,
             ),
           ),
@@ -471,7 +514,9 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
         color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(text, style: TextStyle(fontSize: 12.5, color: textColor, fontWeight: FontWeight.w500)),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 12.5, color: textColor, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -481,7 +526,8 @@ class _CommonSettingsScreenState extends State<CommonSettingsScreen> {
       thickness: 1,
       indent: 66,
       endIndent: 0,
-      color: isDark ? Colors.grey.shade800.withOpacity(0.6) : Colors.grey.shade100,
+      color:
+          isDark ? Colors.grey.shade800.withOpacity(0.6) : Colors.grey.shade100,
     );
   }
 }

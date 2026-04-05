@@ -103,7 +103,9 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
         body = const ManageStudentsScreen();
         break;
       case 5:
-        body = const AddStudentScreen();
+        body = AddStudentScreen(
+          onStudentCreated: () => setState(() => _selectedIndex = 0),
+        );
         break;
       case 6:
         body = const BulkUploadStudentsScreen();

@@ -57,188 +57,184 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Elegant Header
-            _buildHeader(),
+    return SafeArea(
+      child: Column(
+        children: [
+          // Elegant Header
+          _buildHeader(),
 
-            // Search Bar with elegant design
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search by name or email...',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 14,
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: Color(0xFF94A3B8),
-                      size: 20,
-                    ),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                            child: const Icon(
-                              Icons.close,
-                              color: Color(0xFF94A3B8),
-                              size: 20,
-                            ),
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          // Search Bar with elegant design
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                ),
+                ],
               ),
-            ),
-
-            // Student Count Card - Elegant design
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppConstants.primaryColor.withOpacity(0.1),
-                      AppConstants.secondaryColor.withOpacity(0.1),
-                    ],
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search by name or email...',
+                  hintStyle: const TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 14,
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppConstants.primaryColor.withOpacity(0.2),
-                    width: 1,
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Color(0xFF94A3B8),
+                    size: 20,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppConstants.primaryColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.group,
-                        color: AppConstants.primaryColor,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Total Students',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '${_students.length}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppConstants.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    if (filteredStudents.length != _students.length)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${filteredStudents.length} shown',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFF59E0B),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Student List
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredStudents.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_off,
-                                size: 80,
-                                color: Colors.grey[300],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _searchQuery.isEmpty
-                                    ? 'No students found'
-                                    : 'No students match your search',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            color: Color(0xFF94A3B8),
+                            size: 20,
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: filteredStudents.length,
-                          itemBuilder: (context, index) {
-                            final student = filteredStudents[index];
-                            return _buildStudentCard(student);
-                          },
-                        ),
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
             ),
-          ],
-        ),
+          ),
+
+          // Student Count Card - Elegant design
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppConstants.primaryColor.withOpacity(0.1),
+                    AppConstants.secondaryColor.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppConstants.primaryColor.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppConstants.primaryColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.group,
+                      color: AppConstants.primaryColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Students',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${_students.length}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppConstants.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  if (filteredStudents.length != _students.length)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${filteredStudents.length} shown',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFF59E0B),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Student List
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredStudents.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_off,
+                              size: 80,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'No students found'
+                                  : 'No students match your search',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filteredStudents.length,
+                        itemBuilder: (context, index) {
+                          final student = filteredStudents[index];
+                          return _buildStudentCard(student);
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
@@ -258,22 +254,6 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F4FF),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: AppConstants.primaryColor,
-                size: 24,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

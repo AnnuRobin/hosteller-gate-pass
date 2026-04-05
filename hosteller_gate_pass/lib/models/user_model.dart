@@ -9,12 +9,13 @@ class UserModel {
   final int? semester;
   final String? section;
   final String? homeAddress;
+  final String? parentPhone;
   final String? hostelName;
   final String? roomNo;
   final bool emailVerified;
   final DateTime? emailVerifiedAt;
   final DateTime createdAt;
-  
+
   UserModel({
     required this.id,
     required this.email,
@@ -26,13 +27,14 @@ class UserModel {
     this.semester,
     this.section,
     this.homeAddress,
+    this.parentPhone,
     this.hostelName,
     this.roomNo,
     this.emailVerified = false,
     this.emailVerifiedAt,
     required this.createdAt,
   });
-  
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as String,
@@ -45,6 +47,7 @@ class UserModel {
       semester: json['semester'] as int?,
       section: json['section'] as String?,
       homeAddress: json['home_address'] as String?,
+      parentPhone: json['parent_phone'] as String?,
       hostelName: json['hostel_name'] as String?,
       roomNo: json['room_no'] as String?,
       emailVerified: json['email_verified'] as bool? ?? false,
@@ -54,7 +57,7 @@ class UserModel {
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -67,6 +70,7 @@ class UserModel {
       'semester': semester,
       'section': section,
       'home_address': homeAddress,
+      'parent_phone': parentPhone,
       'hostel_name': hostelName,
       'room_no': roomNo,
       'email_verified': emailVerified,
@@ -74,7 +78,7 @@ class UserModel {
       'created_at': createdAt.toIso8601String(),
     };
   }
-  
+
   String get roleDisplayName {
     switch (role) {
       case 'student':

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/student_management_service.dart';
+import '../../utils/constants.dart';
 
 class AddStudentScreen extends StatefulWidget {
-  const AddStudentScreen({Key? key}) : super(key: key);
+  final VoidCallback? onStudentCreated;
+
+  const AddStudentScreen({Key? key, this.onStudentCreated}) : super(key: key);
 
   @override
   State<AddStudentScreen> createState() => _AddStudentScreenState();
@@ -13,137 +16,345 @@ class AddStudentScreen extends StatefulWidget {
 class _AddStudentScreenState extends State<AddStudentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _service = StudentManagementService();
-  
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _hostelNameController = TextEditingController();
   final _roomNoController = TextEditingController();
-  
+  final _homeAddressController = TextEditingController();
+  final _parentPhoneController = TextEditingController();
+
+  String? _selectedSemester;
+  String? _selectedSection;
   bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text('Add Student'),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: AppConstants.primaryColor,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add a new student to your class',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(18)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x0D000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Add Student',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Fill out the student details below and submit to register a new student for your class.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
-              
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter student name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter phone number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Initial Password',
-                  prefixIcon: Icon(Icons.lock),
-                  helperText: 'Default: student123 (can be changed later)',
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _hostelNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Hostel Name',
-                  hintText: 'e.g. Hostel A',
-                  prefixIcon: Icon(Icons.domain),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _roomNoController,
-                decoration: const InputDecoration(
-                  labelText: 'Room Number',
-                  hintText: 'e.g. 101',
-                  prefixIcon: Icon(Icons.meeting_room),
-                ),
-              ),
-              const SizedBox(height: 32),
-              
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _addStudent,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+              Form(
+                key: _formKey,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x0D000000),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInputField(
+                        controller: _nameController,
+                        label: 'Full Name',
+                        hintText: 'John Doe',
+                        icon: Icons.person,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter full name';
+                          }
+                          final trimmed = value.trim();
+                          if (!RegExp(r'^[A-Z][a-zA-Z ]*$').hasMatch(trimmed)) {
+                            return 'Name should start with a capital letter';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _emailController,
+                        label: 'Email',
+                        hintText: 'admin@example.com',
+                        icon: Icons.email,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter email';
+                          }
+                          final trimmed = value.trim();
+                          if (!trimmed.contains('@') ||
+                              !trimmed.contains('.')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _phoneController,
+                        label: 'Phone Number',
+                        hintText: '0123456789',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter phone number';
+                          }
+                          final trimmed = value.trim();
+                          if (!RegExp(r'^\d{10}$').hasMatch(trimmed)) {
+                            return 'Phone number must be 10 digits';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _passwordController,
+                        label: 'Initial Password',
+                        hintText: 'student123',
+                        icon: Icons.lock,
+                        obscureText: true,
+                        helperText: 'Leave empty for default password',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _hostelNameController,
+                        label: 'Hostel Name',
+                        hintText: 'Hostel A',
+                        icon: Icons.domain,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _roomNoController,
+                        label: 'Room Number',
+                        hintText: '101',
+                        icon: Icons.meeting_room,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdownField(
+                        label: 'Semester',
+                        value: _selectedSemester,
+                        items: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'],
+                        icon: Icons.school,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSemester = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a semester';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdownField(
+                        label: 'Section',
+                        value: _selectedSection,
+                        items: ['A', 'B', 'C'],
+                        icon: Icons.groups,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSection = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a section';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _homeAddressController,
+                        label: 'Home Address',
+                        hintText: '123 Main Street, City',
+                        icon: Icons.location_on,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter home address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        controller: _parentPhoneController,
+                        label: 'Parent Phone Number',
+                        hintText: '0123456789',
+                        icon: Icons.phone_in_talk,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter parent phone number';
+                          }
+                          final trimmed = value.trim();
+                          if (!RegExp(r'^\d{10}$').hasMatch(trimmed)) {
+                            return 'Phone number must be 10 digits';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 28),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : _addStudent,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                        )
-                      : const Text('Add Student', style: TextStyle(fontSize: 16)),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  'Create Student',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    String? value,
+    required List<String> items,
+    required IconData icon,
+    required Function(String?) onChanged,
+    String? Function(String?)? validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppConstants.primaryColor),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFF),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: Color(0x3394A3B8)),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: AppConstants.primaryColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    String? hintText,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    String? helperText,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        helperText: helperText,
+        prefixIcon: Icon(icon, color: AppConstants.primaryColor),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFF),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: Color(0x3394A3B8)),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: AppConstants.primaryColor),
         ),
       ),
     );
@@ -158,10 +369,11 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       _isSubmitting = true;
     });
 
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final password = _passwordController.text.isEmpty 
-          ? 'student123' 
+      final password = _passwordController.text.isEmpty
+          ? 'student123'
           : _passwordController.text;
 
       await _service.addStudent(
@@ -177,15 +389,25 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         roomNo: _roomNoController.text.trim().isEmpty
             ? null
             : _roomNoController.text.trim(),
+        semester: _selectedSemester,
+        section: _selectedSection,
+        homeAddress: _homeAddressController.text.trim().isEmpty
+            ? null
+            : _homeAddressController.text.trim(),
+        parentPhone: _parentPhoneController.text.trim().isEmpty
+            ? null
+            : _parentPhoneController.text.trim(),
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Student added successfully!')),
       );
 
-      Navigator.pop(context);
+      widget.onStudentCreated?.call();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
@@ -203,6 +425,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _passwordController.dispose();
     _hostelNameController.dispose();
     _roomNoController.dispose();
+    _homeAddressController.dispose();
+    _parentPhoneController.dispose();
     super.dispose();
   }
 }

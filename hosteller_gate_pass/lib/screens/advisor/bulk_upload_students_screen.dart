@@ -11,7 +11,8 @@ class BulkUploadStudentsScreen extends StatefulWidget {
   const BulkUploadStudentsScreen({Key? key}) : super(key: key);
 
   @override
-  State<BulkUploadStudentsScreen> createState() => _BulkUploadStudentsScreenState();
+  State<BulkUploadStudentsScreen> createState() =>
+      _BulkUploadStudentsScreenState();
 }
 
 class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
@@ -22,15 +23,37 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bulk Upload Students'),
-      ),
-      body: SingleChildScrollView(
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Bulk Upload Students',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                  ),
+                  Text(
+                    'Upload multiple students from CSV file',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Instructions Card
             Card(
               color: Colors.blue.shade50,
@@ -92,7 +115,8 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                 icon: const Icon(Icons.upload_file),
                 label: const Text('Select CSV File'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   backgroundColor: AppConstants.primaryColor,
                 ),
               ),
@@ -116,7 +140,7 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              
+
               // Preview Table
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -184,8 +208,9 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
         final bytes = result.files.first.bytes;
         if (bytes != null) {
           final csvString = utf8.decode(bytes);
-          final List<List<dynamic>> csvData = const CsvToListConverter().convert(csvString);
-          
+          final List<List<dynamic>> csvData =
+              const CsvToListConverter().convert(csvString);
+
           setState(() {
             _csvData = csvData;
             _fileName = result.files.first.name;
@@ -253,4 +278,3 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
     }
   }
 }
-

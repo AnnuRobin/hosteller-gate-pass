@@ -32,7 +32,9 @@ class _StudentDashboardState extends State<StudentDashboard>
         _selectedTab = _tabController.index;
       });
     });
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {

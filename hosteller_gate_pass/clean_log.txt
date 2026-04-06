@@ -1,0 +1,111 @@
+﻿
+
+Running Gradle task 'assembleRelease'...                        
+
+flutter : 
+
+At line:1 char:1
+
++ flutter build apk > 
+
+build_log.txt 2>&1
+
++ ~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo     
+
+         : 
+
+NotSpecified: (:    
+
+String) [], RemoteExc  
+
+  eption
+
+    + 
+
+FullyQualifiedError    
+
+Id : NativeCommandErr  
+
+  or
+
+ 
+
+FAILURE: Build failed 
+
+with an exception.
+
+
+
+* Where:
+
+Build file 'C:\Users\AS
+
+IN\Downloads\hosteller-
+
+gate-pass\hosteller_gat
+
+e_pass\android\build.gr
+
+adle.kts' line: 19
+
+
+
+* What went wrong:
+
+A problem occurred 
+
+configuring project 
+
+':app'.
+
+> [CXX1101] NDK at C:\U
+
+sers\ASIN\AppData\Local
+
+\Android\sdk\ndk\27.0.1
+
+2077973 did not have a 
+
+source.properties file
+
+
+
+* Try:
+
+> Run with 
+
+--stacktrace option to 
+
+get the stack trace.
+
+> Run with --info or 
+
+--debug option to get 
+
+more log output.
+
+> Run with --scan to 
+
+get full insights.
+
+> Get more help at http
+
+s://help.gradle.org.
+
+
+
+BUILD FAILED in 3s
+
+Running Gradle task 'assembleRelease'...                            3.8s
+
+Gradle task 
+
+assembleRelease failed 
+
+with exit code 1
+
+

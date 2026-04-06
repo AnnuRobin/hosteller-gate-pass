@@ -146,7 +146,6 @@ class GatePassService {
     await _supabase.from('gate_pass_requests').delete().eq('id', requestId);
   }
 
-  
   Future<void> advisorAction({
     required String requestId,
     required String advisorId,
@@ -189,8 +188,6 @@ class GatePassService {
     }
   }
 
-  
- 
   Future<void> hodAction({
     required String requestId,
     required String hodId,
@@ -381,7 +378,8 @@ class GatePassService {
       'warden_approved_at': DateTime.now().toIso8601String(),
     };
     if (exitTime != null) updateData['exit_time'] = exitTime.toIso8601String();
-    if (remarks != null && remarks.isNotEmpty) updateData['warden_remarks'] = remarks;
+    if (remarks != null && remarks.isNotEmpty)
+      updateData['warden_remarks'] = remarks;
 
     await _supabase
         .from('gate_pass_requests')
@@ -418,6 +416,15 @@ class GatePassService {
     }).eq('id', requestId);
   }
 
+  Future<void> recordExitTime({
+    required String requestId,
+    required DateTime exitTime,
+  }) async {
+    await _supabase.from('gate_pass_requests').update({
+      'exit_time': exitTime.toIso8601String(),
+    }).eq('id', requestId);
+  }
+
   // Update final status (granted or denied)
   Future<void> updateFinalStatus({
     required String requestId,
@@ -448,23 +455,18 @@ class GatePassService {
 
   // Manually mark a gate pass as expired (e.g. after to_date passes)
   Future<void> markAsExpired(String requestId) async {
-    await _supabase.from('gate_pass_requests').update({
-      'is_expired': true,
-    }).eq('id', requestId);
+    // The database schema does not include an is_expired column in this branch.
+    // If expired tracking is needed, add the column to the schema and re-enable this method.
   }
 
   // Get all gate passes for a specific student (for HOD/Advisor history)
   Future<List<GatePassModel>> getStudentPassHistory(String studentId) async {
-    final response = await _supabase
-        .from('gate_pass_requests')
-        .select('''
+    final response = await _supabase.from('gate_pass_requests').select('''
           *,
           users:student_id(full_name),
           classes:class_id(name),
           departments:department_id(name)
-        ''')
-        .eq('student_id', studentId)
-        .order('created_at', ascending: false);
+        ''').eq('student_id', studentId).order('created_at', ascending: false);
 
     return (response as List).map<GatePassModel>((json) {
       final studentData = json['users'];
@@ -509,16 +511,12 @@ class GatePassService {
   // Get all passes for every student in a class (for Advisor history view)
   Future<Map<String, List<GatePassModel>>> getStudentHistoryForClass(
       String classId) async {
-    final response = await _supabase
-        .from('gate_pass_requests')
-        .select('''
+    final response = await _supabase.from('gate_pass_requests').select('''
           *,
           users:student_id(full_name),
           classes:class_id(name),
           departments:department_id(name)
-        ''')
-        .eq('class_id', classId)
-        .order('created_at', ascending: false);
+        ''').eq('class_id', classId).order('created_at', ascending: false);
 
     final Map<String, List<GatePassModel>> grouped = {};
     for (final json in (response as List)) {

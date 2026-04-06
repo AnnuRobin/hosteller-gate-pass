@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../models/gate_pass_model.dart';
+import 'parent_service.dart';
 
 class GatePassService {
   final SupabaseClient _supabase = SupabaseConfig.client;
+  final ParentService _parentService = ParentService();
 
   // Create gate pass request
   Future<GatePassModel> createRequest({
@@ -222,6 +224,8 @@ class GatePassService {
           : 'Your gate pass request has been rejected by the HOD',
       'type': approved ? 'request_approved' : 'request_rejected',
     });
+
+
   }
 
   // Get single request
@@ -533,4 +537,6 @@ class GatePassService {
     }
     return grouped;
   }
+
+
 }

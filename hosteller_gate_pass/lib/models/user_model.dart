@@ -35,23 +35,25 @@ class UserModel {
   
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      fullName: json['full_name'] as String,
-      phone: json['phone'] as String?,
-      role: json['role'] as String,
-      departmentId: json['department_id'] as String?,
-      classId: json['class_id'] as String?,
-      semester: json['semester'] as int?,
-      section: json['section'] as String?,
-      homeAddress: json['home_address'] as String?,
-      hostelName: json['hostel_name'] as String?,
-      roomNo: json['room_no'] as String?,
-      emailVerified: json['email_verified'] as bool? ?? false,
+      id: json['id']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      fullName: json['full_name']?.toString() ?? '',
+      phone: json['phone']?.toString(),
+      role: json['role']?.toString() ?? 'student',
+      departmentId: json['department_id']?.toString(),
+      classId: json['class_id']?.toString(),
+      semester: json['semester'] is int ? json['semester'] : int.tryParse(json['semester']?.toString() ?? ''),
+      section: json['section']?.toString(),
+      homeAddress: json['home_address']?.toString(),
+      hostelName: json['hostel_name']?.toString(),
+      roomNo: json['room_no']?.toString(),
+      emailVerified: json['email_verified'] == true,
       emailVerifiedAt: json['email_verified_at'] != null
-          ? DateTime.parse(json['email_verified_at'] as String)
+          ? DateTime.tryParse(json['email_verified_at'].toString())
           : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
   

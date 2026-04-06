@@ -16,14 +16,32 @@ class WardenProvider with ChangeNotifier {
       .where((r) => r.hodStatus == 'approved' && r.wardenStatus == 'pending')
       .toList();
 
-  // Get completed requests
-  List<GatePassModel> get completedRequests =>
-      _requests.where((r) => r.finalStatus != null).toList();
+  // Get active passes: warden approved, student not yet returned, AND toDate
+  // is still in the future (not expired).
+  List<GatePassModel> get activePassess {
+    final now = DateTime.now();
+    return _requests
+        .where((r) =>
+            r.wardenStatus == 'approved' &&
+            r.entryTime == null &&
+            r.toDate.isAfter(now))
+        .toList();
+  }
 
-  // Get active passes (warden approved but not returned)
-  List<GatePassModel> get activePassess => _requests
-      .where((r) => r.wardenStatus == 'approved' && r.entryTime == null)
-      .toList();
+  // Get completed requests: explicitly finalised OR warden-approved passes
+  // whose toDate has passed (expired), treating them as done.
+  List<GatePassModel> get completedRequests {
+    final now = DateTime.now();
+    return _requests.where((r) {
+      // Explicitly marked as complete
+      if (r.finalStatus != null) return true;
+      // Warden-approved but the return deadline has passed → expired
+      if (r.wardenStatus == 'approved' &&
+          r.entryTime == null &&
+          r.toDate.isBefore(now)) return true;
+      return false;
+    }).toList();
+  }
 
   Future<void> loadWardenRequests(String wardenId) async {
     _wardenId = wardenId;

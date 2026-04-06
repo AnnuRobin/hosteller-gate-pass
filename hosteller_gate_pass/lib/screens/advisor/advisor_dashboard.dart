@@ -128,7 +128,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
       canPop: _selectedIndex == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        // On a sub-section — go back to Home
+        // On a sub-section ΓÇö go back to Home
         setState(() => _selectedIndex = 0);
       },
       child: Scaffold(
@@ -148,7 +148,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     );
   }
 
-  // ─────────────────────────────── TOP HEADER ──────────────────────────────
+  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ TOP HEADER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   Widget _buildHeader(BuildContext context, String fullName, String initials,
       {int pendingCount = 0}) {
@@ -199,7 +199,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Notification bell — red dot only when pending passes exist
+              // Notification bell ΓÇö red dot only when pending passes exist
               GestureDetector(
                 onTap: () {
                   // Navigate to Pending Requests section
@@ -272,7 +272,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     );
   }
 
-  // ───────────────────────────────── DRAWER ────────────────────────────────
+  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ DRAWER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   Widget _buildDrawer(BuildContext context, AuthProvider authProvider,
       String fullName, String initials) {
@@ -468,7 +468,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     );
   }
 
-  // ──────────────────────────────── HOME PAGE ───────────────────────────────
+  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ HOME PAGE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   Widget _buildHomePage({
     required int pendingCount,
@@ -637,7 +637,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     );
   }
 
-  // ──────────────────────────────── LIST PAGE ───────────────────────────────
+  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ LIST PAGE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   Widget _buildListPage({
     required String title,

@@ -52,9 +52,11 @@ class UserModel {
       roomNo: json['room_no'] as String?,
       emailVerified: json['email_verified'] as bool? ?? false,
       emailVerifiedAt: json['email_verified_at'] != null
-          ? DateTime.parse(json['email_verified_at'] as String)
+          ? DateTime.tryParse(json['email_verified_at'].toString())
           : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 

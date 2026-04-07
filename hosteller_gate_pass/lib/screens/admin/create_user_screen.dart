@@ -56,25 +56,39 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
   // Each role has its own accent colour for visual identity
   Color get _roleColor {
     switch (_selectedRole) {
-      case 'student':   return const Color(0xFF3B82F6); // blue
-      case 'advisor':   return const Color(0xFF8B5CF6); // violet
-      case 'hod':       return const Color(0xFFF59E0B); // amber
-      case 'warden':    return const Color(0xFF10B981); // emerald
-      case 'admin':     return const Color(0xFFEF4444); // red
-      case 'parent':    return const Color(0xFF6366F1); // indigo
-      default:          return AppConstants.primaryColor;
+      case 'student':
+        return const Color(0xFF3B82F6); // blue
+      case 'advisor':
+        return const Color(0xFF8B5CF6); // violet
+      case 'hod':
+        return const Color(0xFFF59E0B); // amber
+      case 'warden':
+        return const Color(0xFF10B981); // emerald
+      case 'admin':
+        return const Color(0xFFEF4444); // red
+      case 'parent':
+        return const Color(0xFF6366F1); // indigo
+      default:
+        return AppConstants.primaryColor;
     }
   }
 
   IconData get _roleIcon {
     switch (_selectedRole) {
-      case 'student': return Icons.school_rounded;
-      case 'advisor': return Icons.person_pin_rounded;
-      case 'hod':     return Icons.account_balance_rounded;
-      case 'warden':  return Icons.security_rounded;
-      case 'admin':   return Icons.admin_panel_settings_rounded;
-      case 'parent':  return Icons.family_restroom_rounded;
-      default:        return Icons.person_rounded;
+      case 'student':
+        return Icons.school_rounded;
+      case 'advisor':
+        return Icons.person_pin_rounded;
+      case 'hod':
+        return Icons.account_balance_rounded;
+      case 'warden':
+        return Icons.security_rounded;
+      case 'admin':
+        return Icons.admin_panel_settings_rounded;
+      case 'parent':
+        return Icons.family_restroom_rounded;
+      default:
+        return Icons.person_rounded;
     }
   }
 
@@ -82,10 +96,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        title: const Text('Create New User'),
-        elevation: 0,
-      ),
+      appBar: null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -104,6 +115,12 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                     ),
                     child: Row(
                       children: [
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 8),
                         Container(
                           width: 56,
                           height: 56,
@@ -163,8 +180,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                       accentColor: const Color(0xFF3B82F6),
                                       keyboardType: TextInputType.emailAddress,
                                       validator: (v) {
-                                        if (v == null || v.isEmpty) return 'Required';
-                                        if (!v.contains('@')) return 'Invalid email';
+                                        if (v == null || v.isEmpty)
+                                          return 'Required';
+                                        if (!v.contains('@'))
+                                          return 'Invalid email';
                                         return null;
                                       },
                                     ),
@@ -176,8 +195,9 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                       label: 'Full Name *',
                                       icon: Icons.badge_outlined,
                                       accentColor: const Color(0xFF3B82F6),
-                                      validator: (v) =>
-                                          (v == null || v.isEmpty) ? 'Required' : null,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? 'Required'
+                                          : null,
                                     ),
                                   ),
                                 ],
@@ -202,12 +222,14 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                             size: 18,
                                             color: Colors.grey,
                                           ),
-                                          onPressed: () => setState(
-                                              () => _obscurePassword = !_obscurePassword),
+                                          onPressed: () => setState(() =>
+                                              _obscurePassword =
+                                                  !_obscurePassword),
                                         ),
                                       ),
                                       validator: (v) {
-                                        if (v == null || v.isEmpty) return 'Required';
+                                        if (v == null || v.isEmpty)
+                                          return 'Required';
                                         if (v.length < 8) return 'Min 8 chars';
                                         return null;
                                       },
@@ -244,12 +266,16 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                   accentColor: _roleColor,
                                 ),
                                 items: const [
-                                  DropdownMenuItem(value: 'student', child: Text('Student')),
-                                  DropdownMenuItem(value: 'advisor', child: Text('Advisor')),
-                                  DropdownMenuItem(value: 'hod', child: Text('HOD')),
-                                  DropdownMenuItem(value: 'warden', child: Text('Warden')),
-                                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                                  DropdownMenuItem(value: 'parent', child: Text('Parent')),
+                                  DropdownMenuItem(
+                                      value: 'student', child: Text('Student')),
+                                  DropdownMenuItem(
+                                      value: 'advisor', child: Text('Advisor')),
+                                  DropdownMenuItem(
+                                      value: 'hod', child: Text('HOD')),
+                                  DropdownMenuItem(
+                                      value: 'warden', child: Text('Warden')),
+                                  DropdownMenuItem(
+                                      value: 'parent', child: Text('Parent')),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
@@ -265,7 +291,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                           const SizedBox(height: 14),
 
                           // ─ Role-specific fields ─
-                          if (_selectedRole == 'student') ..._buildStudentCard(),
+                          if (_selectedRole == 'student')
+                            ..._buildStudentCard(),
                           if (_selectedRole == 'advisor' ||
                               _selectedRole == 'hod' ||
                               _selectedRole == 'warden')
@@ -280,9 +307,11 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                 child: OutlinedButton(
                                   onPressed: () => Navigator.pop(context),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
                                   child: const Text('Cancel'),
                                 ),
@@ -291,16 +320,19 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                               Expanded(
                                 flex: 2,
                                 child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.person_add_rounded, size: 18),
+                                  icon: const Icon(Icons.person_add_rounded,
+                                      size: 18),
                                   label: const Text('Create User',
                                       style: TextStyle(fontSize: 15)),
                                   onPressed: _createUser,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _roleColor,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                     elevation: 2,
                                   ),
                                 ),
@@ -347,7 +379,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: sectionColor.withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               border: Border(
                 left: BorderSide(color: sectionColor, width: 3),
               ),
@@ -395,7 +428,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      decoration: _inputDecoration(label: label, icon: icon, accentColor: accentColor),
+      decoration:
+          _inputDecoration(label: label, icon: icon, accentColor: accentColor),
       validator: validator,
     );
   }
@@ -450,9 +484,13 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                   value: _selectedDepartmentId,
                   isExpanded: true,
                   decoration: _inputDecoration(
-                      label: 'Department *', icon: Icons.business_outlined, accentColor: color),
+                      label: 'Department *',
+                      icon: Icons.business_outlined,
+                      accentColor: color),
                   items: _departments
-                      .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis)))
+                      .map((d) => DropdownMenuItem(
+                          value: d.id,
+                          child: Text(d.name, overflow: TextOverflow.ellipsis)))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedDepartmentId = v),
                   validator: (v) => v == null ? 'Required' : null,
@@ -463,9 +501,13 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                 child: DropdownButtonFormField<int>(
                   value: _selectedSemester,
                   decoration: _inputDecoration(
-                      label: 'Semester *', icon: Icons.layers_outlined, accentColor: color),
-                  items: List.generate(8, (i) => DropdownMenuItem(
-                      value: i + 1, child: Text('Sem ${i + 1}'))),
+                      label: 'Semester *',
+                      icon: Icons.layers_outlined,
+                      accentColor: color),
+                  items: List.generate(
+                      8,
+                      (i) => DropdownMenuItem(
+                          value: i + 1, child: Text('Sem ${i + 1}'))),
                   onChanged: (v) => setState(() => _selectedSemester = v),
                   validator: (v) => v == null ? 'Required' : null,
                 ),
@@ -480,9 +522,12 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                 child: DropdownButtonFormField<String>(
                   value: _selectedSection,
                   decoration: _inputDecoration(
-                      label: 'Section *', icon: Icons.class_outlined, accentColor: color),
+                      label: 'Section *',
+                      icon: Icons.class_outlined,
+                      accentColor: color),
                   items: ['A', 'B', 'C', 'D', 'E']
-                      .map((s) => DropdownMenuItem(value: s, child: Text('Sec $s')))
+                      .map((s) =>
+                          DropdownMenuItem(value: s, child: Text('Sec $s')))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedSection = v!),
                 ),
@@ -538,9 +583,13 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             value: _selectedDepartmentId,
             isExpanded: true,
             decoration: _inputDecoration(
-                label: 'Department', icon: Icons.business_outlined, accentColor: _roleColor),
+                label: 'Department',
+                icon: Icons.business_outlined,
+                accentColor: _roleColor),
             items: _departments
-                .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis)))
+                .map((d) => DropdownMenuItem(
+                    value: d.id,
+                    child: Text(d.name, overflow: TextOverflow.ellipsis)))
                 .toList(),
             onChanged: (v) => setState(() => _selectedDepartmentId = v),
           ),
@@ -570,7 +619,9 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         password: _passwordController.text,
         fullName: _fullNameController.text.trim(),
         role: _selectedRole,
-        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
         departmentId: _selectedDepartmentId,
         semester: _selectedSemester,
         section: _selectedRole == 'student' ? _selectedSection : null,
@@ -580,7 +631,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         hostelName: _hostelNameController.text.trim().isEmpty
             ? null
             : _hostelNameController.text.trim(),
-        roomNo: _selectedRole == 'student' && _roomNoController.text.trim().isNotEmpty
+        roomNo: _selectedRole == 'student' &&
+                _roomNoController.text.trim().isNotEmpty
             ? _roomNoController.text.trim()
             : null,
       );
@@ -588,7 +640,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('User ${_fullNameController.text} created successfully!'),
+            content:
+                Text('User ${_fullNameController.text} created successfully!'),
             backgroundColor: AppConstants.successColor,
           ),
         );

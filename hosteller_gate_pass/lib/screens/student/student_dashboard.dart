@@ -10,6 +10,7 @@ import '../../widgets/request_card.dart';
 import '../../models/gate_pass_model.dart';
 import 'create_request_screen.dart';
 import 'gate_pass_token_screen.dart';
+import 'student_request_list_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({Key? key}) : super(key: key);
@@ -18,20 +19,10 @@ class StudentDashboard extends StatefulWidget {
   State<StudentDashboard> createState() => _StudentDashboardState();
 }
 
-class _StudentDashboardState extends State<StudentDashboard>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _selectedTab = 0;
-
+class _StudentDashboardState extends State<StudentDashboard> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _selectedTab = _tabController.index;
-      });
-    });
     _loadData();
   }
 
@@ -43,8 +34,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         Provider.of<NotificationProvider>(context, listen: false);
 
     if (authProvider.currentUser != null) {
-      await gatePassProvider
-          .loadStudentRequests(authProvider.currentUser!.id);
+      await gatePassProvider.loadStudentRequests(authProvider.currentUser!.id);
       await notificationProvider
           .loadNotifications(authProvider.currentUser!.id);
     }
@@ -56,319 +46,296 @@ class _StudentDashboardState extends State<StudentDashboard>
     final gatePassProvider = Provider.of<GatePassProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(context);
 
-    // Find the most recent fully-approved pass for the banner
-    final activePass = gatePassProvider.requests
-        .where((r) => r.isFinallyApproved)
-        .toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    final GatePassModel? latestActivePass =
-        activePass.isNotEmpty ? activePass.first : null;
+    final activeRequests =
+        gatePassProvider.requests.where((r) => r.isFinallyApproved).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gate Pass'),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications),
-                onPressed: () =>
-                    _showNotifications(context, notificationProvider),
-              ),
-              if (notificationProvider.unreadCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${notificationProvider.unreadCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await authProvider.signOut();
-            },
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Pending'),
-            Tab(text: 'Approved'),
-            Tab(text: 'Rejected'),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // Welcome Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppConstants.primaryColor,
-                  AppConstants.secondaryColor
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome, ${authProvider.userProfile?.fullName ?? "Student"}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Total Requests: ${gatePassProvider.requests.length}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-
-          // ─── Active Gate Pass Banner ───────────────────────────
-          if (latestActivePass != null)
-            _buildActivePassBanner(context, latestActivePass),
-
-          // Stats Cards
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                _buildStatCard(
-                  'Pending',
-                  gatePassProvider.pendingRequests.length.toString(),
-                  AppConstants.pendingColor,
-                ),
-                const SizedBox(width: 12),
-                _buildStatCard(
-                  'Approved',
-                  gatePassProvider.approvedRequests.length.toString(),
-                  AppConstants.approvedColor,
-                ),
-                const SizedBox(width: 12),
-                _buildStatCard(
-                  'Rejected',
-                  gatePassProvider.rejectedRequests.length.toString(),
-                  AppConstants.rejectedColor,
-                ),
-              ],
-            ),
-          ),
-
-          // Request List
           Expanded(
-            child: gatePassProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildRequestList(gatePassProvider.requests),
-                      _buildRequestList(gatePassProvider.pendingRequests),
-                      _buildRequestList(gatePassProvider.approvedRequests),
-                      _buildRequestList(gatePassProvider.rejectedRequests),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('New Request'),
-        backgroundColor: AppConstants.primaryColor,
-      ),
-    );
-  }
-
-  Widget _buildActivePassBanner(BuildContext context, GatePassModel pass) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GatePassTokenScreen(request: pass),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF064E3B), Color(0xFF059669), Color(0xFF34D399)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF34D399).withOpacity(0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
+            child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
+                color: AppConstants.primaryColor,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(30),
+                ),
               ),
-              child: const Icon(Icons.verified_rounded,
-                  color: Colors.white, size: 26),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
+              padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 10, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'ACTIVE GATE PASS',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Text(
+                          DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.notifications_none, color: Colors.white),
+                                onPressed: () => _showNotifications(context, notificationProvider),
+                              ),
+                              if (notificationProvider.unreadCount > 0)
+                                Positioned(
+                                  right: 10,
+                                  top: 10,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF8DE8C4),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.logout, color: Colors.white),
+                            onPressed: () async {
+                              await authProvider.signOut();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_getGreeting()},',
                     style: TextStyle(
-                      color: Color(0xFF064E3B),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 36,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 1.0,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 8),
                   Text(
-                    pass.destination,
+                    authProvider.userProfile?.fullName ?? 'Student',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    '${DateFormat('dd MMM').format(pass.fromDate)} → ${DateFormat('dd MMM yyyy').format(pass.toDate)}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatItem(
+                        'Pending\nPasses',
+                        gatePassProvider.pendingRequests.length.toString(),
+                        () => _navigateToList(context, StudentRequestListType.pending, 'Pending Passes'),
+                      ),
+                      Container(height: 40, width: 1, color: Colors.white.withOpacity(0.2)),
+                      _buildStatItem(
+                        'Approved\nPasses',
+                        gatePassProvider.approvedRequests.length.toString(),
+                        () => _navigateToList(context, StudentRequestListType.approved, 'Approved Passes'),
+                      ),
+                      Container(height: 40, width: 1, color: Colors.white.withOpacity(0.2)),
+                      _buildStatItem(
+                        'Rejected\nPasses',
+                        gatePassProvider.rejectedRequests.length.toString(),
+                        () => _navigateToList(context, StudentRequestListType.rejected, 'Rejected Passes'),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
-          ],
-        ),
+          ),
+          Container(
+            color: Colors.transparent,
+            padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSelectionCard(
+                        title: 'Passes History',
+                        subtitle: 'View all requests',
+                        icon: Icons.history,
+                        iconBgColor: Colors.purple.withOpacity(0.1),
+                        iconColor: Colors.purple,
+                        onTap: () => _navigateToList(context, StudentRequestListType.history, 'Passes History'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildSelectionCard(
+                        title: 'Active Passes',
+                        subtitle: 'Currently active',
+                        icon: Icons.lock_open,
+                        iconBgColor: Colors.teal.withOpacity(0.1),
+                        iconColor: Colors.teal,
+                        onTap: () => _navigateToList(context, StudentRequestListType.active, 'Active Passes'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CreateRequestScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8DE8C4),
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'NEW REQUEST',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
-    return Expanded(
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  void _navigateToList(BuildContext context, StudentRequestListType type, String title) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StudentRequestListScreen(type: type, title: title),
+      ),
+    );
+  }
+
+  Widget _buildSelectionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: color,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(14),
               ),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRequestList(List requests) {
-    if (requests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'No requests found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              title,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
             ),
           ],
         ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: requests.length,
-        itemBuilder: (context, index) {
-          return RequestCard(request: requests[index]);
-        },
       ),
     );
   }
 
-  void _showNotifications(
-      BuildContext context, NotificationProvider provider) {
+  Widget _buildStatItem(String label, String value, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            Text(
+              value.padLeft(2, '0'),
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF8DE8C4), // Match reference's minty green numbers
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withOpacity(0.9),
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context, NotificationProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -390,8 +357,8 @@ class _StudentDashboardState extends State<StudentDashboard>
                   children: [
                     const Text(
                       'Notifications',
-                      style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     if (provider.unreadCount > 0)
                       TextButton(
@@ -415,8 +382,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                         controller: scrollController,
                         itemCount: provider.notifications.length,
                         itemBuilder: (context, index) {
-                          final notification =
-                              provider.notifications[index];
+                          final notification = provider.notifications[index];
                           return ListTile(
                             leading: Icon(
                               notification.read
@@ -458,7 +424,6 @@ class _StudentDashboardState extends State<StudentDashboard>
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 }

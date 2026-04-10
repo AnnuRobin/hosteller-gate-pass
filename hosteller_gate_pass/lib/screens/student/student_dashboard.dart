@@ -311,7 +311,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         child: Column(
           children: [
             Text(
-              value.padLeft(2, '0'),
+              value == '0' ? '0' : value.padLeft(2, '0'),
               style: const TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.bold,

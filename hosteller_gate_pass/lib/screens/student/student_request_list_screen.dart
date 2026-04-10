@@ -41,8 +41,9 @@ class StudentRequestListScreen extends StatelessWidget {
               requests = gatePassProvider.requests;
               break;
             case StudentRequestListType.active:
+              final now = DateTime.now();
               requests = gatePassProvider.requests
-                  .where((r) => r.isFinallyApproved)
+                  .where((r) => r.isFinallyApproved && !r.toDate.isBefore(now))
                   .toList();
               break;
           }

@@ -18,6 +18,7 @@ dependencies:
   # Utilities
   intl: ^0.18.1
   shared_preferences: ^2.2.2
+  geolocator: ^14.0.2
   
   # File handling for CSV upload
   file_picker: ^10.3.10

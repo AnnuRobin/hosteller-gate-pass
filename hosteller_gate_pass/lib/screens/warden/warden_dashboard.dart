@@ -29,8 +29,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
   Future<void> _loadData() async {
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final wardenProvider =
-        Provider.of<WardenProvider>(context, listen: false);
+    final wardenProvider = Provider.of<WardenProvider>(context, listen: false);
     final wardenId = authProvider.userProfile?.id ?? '';
     await wardenProvider.loadWardenRequests(wardenId);
   }
@@ -50,8 +49,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
     final pendingRequests = wardenProvider.pendingWardenRequests;
     final activePassess = wardenProvider.activePassess;
     final completedRequests = wardenProvider.completedRequests;
-    final fullName =
-        authProvider.userProfile?.fullName ?? 'Warden';
+    final fullName = authProvider.userProfile?.fullName ?? 'Warden';
     final initials = fullName.isNotEmpty ? fullName[0].toUpperCase() : 'W';
 
     Widget body;
@@ -121,8 +119,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
 
   // ─────────────────────────────── TOP HEADER ──────────────────────────────
 
-  Widget _buildHeader(
-      BuildContext context, String fullName, String initials,
+  Widget _buildHeader(BuildContext context, String fullName, String initials,
       {int pendingCount = 0}) {
     final hasPending = pendingCount > 0;
     return Container(
@@ -350,8 +347,8 @@ class _WardenDashboardState extends State<WardenDashboard> {
                   color: const Color(0xFFFEE2E2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.logout, color: Color(0xFFEF4444),
-                    size: 20),
+                child: const Icon(Icons.logout,
+                    color: Color(0xFFEF4444), size: 20),
               ),
               title: const Text(
                 'Logout',
@@ -406,8 +403,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
             color: isSelected
                 ? AppConstants.primaryColor
                 : const Color(0xFF334155),
-            fontWeight:
-                isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             fontSize: 14,
           ),
         ),
@@ -578,14 +574,12 @@ class _WardenDashboardState extends State<WardenDashboard> {
       icon: Icon(icon, size: 18, color: AppConstants.primaryColor),
       label: Text(
         label,
-        style: const TextStyle(
-            color: AppConstants.primaryColor, fontSize: 13),
+        style: const TextStyle(color: AppConstants.primaryColor, fontSize: 13),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         side: const BorderSide(color: AppConstants.primaryColor),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -644,8 +638,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      WardenRequestDetailScreen(
+                                  builder: (_) => WardenRequestDetailScreen(
                                     request: request,
                                     requestType: type,
                                   ),

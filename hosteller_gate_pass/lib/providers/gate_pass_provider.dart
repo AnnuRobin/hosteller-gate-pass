@@ -8,78 +8,78 @@ class GatePassProvider with ChangeNotifier {
   List<GatePassModel> _requests = [];
   bool _isLoading = false;
   RealtimeChannel? _subscription;
-  
+
   List<GatePassModel> get requests => _requests;
   bool get isLoading => _isLoading;
-  
+
   // Get pending requests
   List<GatePassModel> get pendingRequests =>
       _requests.where((r) => r.status == 'pending').toList();
-  
+
   // Get approved requests (includes legacy warden_approved status)
-  List<GatePassModel> get approvedRequests =>
-      _requests.where((r) => r.status == 'approved' || r.status == 'warden_approved').toList();
-  
+  List<GatePassModel> get approvedRequests => _requests
+      .where((r) => r.status == 'approved' || r.status == 'warden_approved')
+      .toList();
+
   // Get rejected requests
   List<GatePassModel> get rejectedRequests =>
       _requests.where((r) => r.status == 'rejected').toList();
-  
+
   Future<void> loadStudentRequests(String studentId) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       _requests = await _service.getStudentRequests(studentId);
       _setupRealtimeSubscription(studentId: studentId);
     } catch (e) {
       print('Error loading requests: $e');
     }
-    
+
     _isLoading = false;
     notifyListeners();
   }
-  
- Future<void> loadAdvisorRequests({
-  required String classId,
-  required String departmentId,
-}) async {
-  _isLoading = true;
-  notifyListeners();
 
-  try {
-    _requests = await _service.getAdvisorRequests(
-      classId: classId,
-      departmentId: departmentId,
-    );
+  Future<void> loadAdvisorRequests({
+    required String classId,
+    required String departmentId,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
 
-    _setupRealtimeSubscription(
-      classId: classId,
-      departmentId: departmentId,
-    );
-  } catch (e) {
-    debugPrint('Error loading advisor requests: $e');
+    try {
+      _requests = await _service.getAdvisorRequests(
+        classId: classId,
+        departmentId: departmentId,
+      );
+
+      _setupRealtimeSubscription(
+        classId: classId,
+        departmentId: departmentId,
+      );
+    } catch (e) {
+      debugPrint('Error loading advisor requests: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
-  _isLoading = false;
-  notifyListeners();
-}
-
-  
   Future<void> loadHodRequests(String departmentId) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       _requests = await _service.getHodRequests(departmentId);
       _setupRealtimeSubscription(departmentId: departmentId);
     } catch (e) {
       print('Error loading requests: $e');
     }
-    
+
     _isLoading = false;
     notifyListeners();
   }
-  
+
   Future<void> createRequest({
     required String studentId,
     required String classId,
@@ -99,7 +99,7 @@ class GatePassProvider with ChangeNotifier {
       toDate: toDate,
     );
   }
-  
+
   Future<void> updateRequest({
     required String requestId,
     String? reason,
@@ -115,13 +115,48 @@ class GatePassProvider with ChangeNotifier {
       toDate: toDate,
     );
   }
-  
+
+  Future<void> recordExitTime({
+    required String requestId,
+    required DateTime exitTime,
+  }) async {
+    await _service.recordExitTime(
+      requestId: requestId,
+      exitTime: exitTime,
+    );
+
+    final index = _requests.indexWhere((r) => r.id == requestId);
+    if (index != -1) {
+      _requests[index] = _requests[index].copyWith(exitTime: exitTime);
+      notifyListeners();
+    }
+  }
+
+  Future<void> recordEntryTime({
+    required String requestId,
+    required DateTime entryTime,
+  }) async {
+    await _service.recordEntryTime(
+      requestId: requestId,
+      entryTime: entryTime,
+    );
+
+    final index = _requests.indexWhere((r) => r.id == requestId);
+    if (index != -1) {
+      _requests[index] = _requests[index].copyWith(
+        entryTime: entryTime,
+        isExpired: true,
+      );
+      notifyListeners();
+    }
+  }
+
   Future<void> deleteRequest(String requestId) async {
     await _service.deleteRequest(requestId);
     _requests.removeWhere((r) => r.id == requestId);
     notifyListeners();
   }
-  
+
   Future<void> advisorAction({
     required String requestId,
     required String advisorId,
@@ -135,7 +170,7 @@ class GatePassProvider with ChangeNotifier {
       remarks: remarks,
     );
   }
-  
+
   Future<void> hodAction({
     required String requestId,
     required String hodId,
@@ -149,14 +184,14 @@ class GatePassProvider with ChangeNotifier {
       remarks: remarks,
     );
   }
-  
+
   void _setupRealtimeSubscription({
     String? studentId,
     String? classId,
     String? departmentId,
   }) {
     _subscription?.unsubscribe();
-    
+
     _subscription = _service.subscribeToRequests(
       studentId: studentId,
       classId: classId,
@@ -178,7 +213,7 @@ class GatePassProvider with ChangeNotifier {
       },
     );
   }
-  
+
   @override
   void dispose() {
     _subscription?.unsubscribe();

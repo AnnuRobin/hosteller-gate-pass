@@ -1,0 +1,298 @@
+
+Welcome to Gradle 8.10.2!
+
+Here are the highlights of this release:
+ - Support for Java 23
+ - Faster configuration cache
+ - Better configuration cache reports
+
+For more details see https://docs.gradle.org/8.10.2/release-notes.html
+
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy UP-TO-DATE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:compileFlutterBuildDebug
+> Task :app:packJniLibsflutterBuildDebug
+> Task :app_links:preBuild UP-TO-DATE
+> Task :app_links:preDebugBuild UP-TO-DATE
+> Task :app_links:writeDebugAarMetadata UP-TO-DATE
+> Task :file_picker:preBuild UP-TO-DATE
+> Task :file_picker:preDebugBuild UP-TO-DATE
+> Task :file_picker:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_local_notifications:preBuild UP-TO-DATE
+> Task :flutter_local_notifications:preDebugBuild UP-TO-DATE
+> Task :flutter_local_notifications:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:preBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:preDebugBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:writeDebugAarMetadata UP-TO-DATE
+> Task :geolocator_android:preBuild UP-TO-DATE
+> Task :geolocator_android:preDebugBuild UP-TO-DATE
+> Task :geolocator_android:writeDebugAarMetadata UP-TO-DATE
+> Task :package_info_plus:preBuild UP-TO-DATE
+> Task :package_info_plus:preDebugBuild UP-TO-DATE
+> Task :package_info_plus:writeDebugAarMetadata UP-TO-DATE
+> Task :path_provider_android:preBuild UP-TO-DATE
+> Task :path_provider_android:preDebugBuild UP-TO-DATE
+> Task :path_provider_android:writeDebugAarMetadata UP-TO-DATE
+> Task :printing:preBuild UP-TO-DATE
+> Task :printing:preDebugBuild UP-TO-DATE
+> Task :printing:writeDebugAarMetadata UP-TO-DATE
+> Task :shared_preferences_android:preBuild UP-TO-DATE
+> Task :shared_preferences_android:preDebugBuild UP-TO-DATE
+> Task :shared_preferences_android:writeDebugAarMetadata UP-TO-DATE
+> Task :url_launcher_android:preBuild UP-TO-DATE
+> Task :url_launcher_android:preDebugBuild UP-TO-DATE
+> Task :url_launcher_android:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:cleanMergeDebugAssets
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app_links:mergeDebugShaders UP-TO-DATE
+> Task :app_links:compileDebugShaders NO-SOURCE
+> Task :app_links:generateDebugAssets UP-TO-DATE
+> Task :app_links:packageDebugAssets UP-TO-DATE
+> Task :file_picker:mergeDebugShaders UP-TO-DATE
+> Task :file_picker:compileDebugShaders NO-SOURCE
+> Task :file_picker:generateDebugAssets UP-TO-DATE
+> Task :file_picker:packageDebugAssets UP-TO-DATE
+> Task :flutter_local_notifications:mergeDebugShaders UP-TO-DATE
+> Task :flutter_local_notifications:compileDebugShaders NO-SOURCE
+> Task :flutter_local_notifications:generateDebugAssets UP-TO-DATE
+> Task :flutter_local_notifications:packageDebugAssets UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:mergeDebugShaders UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:compileDebugShaders NO-SOURCE
+> Task :flutter_plugin_android_lifecycle:generateDebugAssets UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:packageDebugAssets UP-TO-DATE
+> Task :geolocator_android:mergeDebugShaders UP-TO-DATE
+> Task :geolocator_android:compileDebugShaders NO-SOURCE
+> Task :geolocator_android:generateDebugAssets UP-TO-DATE
+> Task :geolocator_android:packageDebugAssets UP-TO-DATE
+> Task :package_info_plus:mergeDebugShaders UP-TO-DATE
+> Task :package_info_plus:compileDebugShaders NO-SOURCE
+> Task :package_info_plus:generateDebugAssets UP-TO-DATE
+> Task :package_info_plus:packageDebugAssets UP-TO-DATE
+> Task :path_provider_android:mergeDebugShaders UP-TO-DATE
+> Task :path_provider_android:compileDebugShaders NO-SOURCE
+> Task :path_provider_android:generateDebugAssets UP-TO-DATE
+> Task :path_provider_android:packageDebugAssets UP-TO-DATE
+> Task :printing:mergeDebugShaders UP-TO-DATE
+> Task :printing:compileDebugShaders NO-SOURCE
+> Task :printing:generateDebugAssets UP-TO-DATE
+> Task :printing:packageDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:mergeDebugShaders UP-TO-DATE
+> Task :shared_preferences_android:compileDebugShaders NO-SOURCE
+> Task :shared_preferences_android:generateDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:packageDebugAssets UP-TO-DATE
+> Task :url_launcher_android:mergeDebugShaders UP-TO-DATE
+> Task :url_launcher_android:compileDebugShaders NO-SOURCE
+> Task :url_launcher_android:generateDebugAssets UP-TO-DATE
+> Task :url_launcher_android:packageDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:copyFlutterAssetsDebug
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app_links:generateDebugResValues UP-TO-DATE
+> Task :app_links:generateDebugResources UP-TO-DATE
+> Task :app_links:packageDebugResources UP-TO-DATE
+> Task :file_picker:generateDebugResValues UP-TO-DATE
+> Task :file_picker:generateDebugResources UP-TO-DATE
+> Task :file_picker:packageDebugResources UP-TO-DATE
+> Task :flutter_local_notifications:generateDebugResValues UP-TO-DATE
+> Task :flutter_local_notifications:generateDebugResources UP-TO-DATE
+> Task :flutter_local_notifications:packageDebugResources UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:generateDebugResValues UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:generateDebugResources UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:packageDebugResources UP-TO-DATE
+> Task :geolocator_android:generateDebugResValues UP-TO-DATE
+> Task :geolocator_android:generateDebugResources UP-TO-DATE
+> Task :geolocator_android:packageDebugResources UP-TO-DATE
+> Task :package_info_plus:generateDebugResValues UP-TO-DATE
+> Task :package_info_plus:generateDebugResources UP-TO-DATE
+> Task :package_info_plus:packageDebugResources UP-TO-DATE
+> Task :path_provider_android:generateDebugResValues UP-TO-DATE
+> Task :path_provider_android:generateDebugResources UP-TO-DATE
+> Task :path_provider_android:packageDebugResources UP-TO-DATE
+> Task :printing:generateDebugResValues UP-TO-DATE
+> Task :printing:generateDebugResources UP-TO-DATE
+> Task :printing:packageDebugResources UP-TO-DATE
+> Task :shared_preferences_android:generateDebugResValues UP-TO-DATE
+> Task :shared_preferences_android:generateDebugResources UP-TO-DATE
+> Task :shared_preferences_android:packageDebugResources UP-TO-DATE
+> Task :url_launcher_android:generateDebugResValues UP-TO-DATE
+> Task :url_launcher_android:generateDebugResources UP-TO-DATE
+> Task :url_launcher_android:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app_links:extractDeepLinksDebug UP-TO-DATE
+> Task :app_links:processDebugManifest UP-TO-DATE
+> Task :file_picker:extractDeepLinksDebug UP-TO-DATE
+> Task :file_picker:processDebugManifest UP-TO-DATE
+> Task :flutter_local_notifications:extractDeepLinksDebug UP-TO-DATE
+> Task :flutter_local_notifications:processDebugManifest UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:extractDeepLinksDebug UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:processDebugManifest UP-TO-DATE
+> Task :geolocator_android:extractDeepLinksDebug UP-TO-DATE
+> Task :geolocator_android:processDebugManifest UP-TO-DATE
+> Task :package_info_plus:extractDeepLinksDebug UP-TO-DATE
+> Task :package_info_plus:processDebugManifest UP-TO-DATE
+> Task :path_provider_android:extractDeepLinksDebug UP-TO-DATE
+> Task :path_provider_android:processDebugManifest UP-TO-DATE
+> Task :printing:extractDeepLinksDebug UP-TO-DATE
+> Task :printing:processDebugManifest UP-TO-DATE
+> Task :shared_preferences_android:extractDeepLinksDebug UP-TO-DATE
+> Task :shared_preferences_android:processDebugManifest UP-TO-DATE
+> Task :url_launcher_android:extractDeepLinksDebug UP-TO-DATE
+> Task :url_launcher_android:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app_links:compileDebugLibraryResources UP-TO-DATE
+> Task :app_links:parseDebugLocalResources UP-TO-DATE
+> Task :app_links:generateDebugRFile UP-TO-DATE
+> Task :file_picker:compileDebugLibraryResources UP-TO-DATE
+> Task :file_picker:parseDebugLocalResources UP-TO-DATE
+> Task :file_picker:generateDebugRFile UP-TO-DATE
+> Task :flutter_local_notifications:compileDebugLibraryResources UP-TO-DATE
+> Task :flutter_local_notifications:parseDebugLocalResources UP-TO-DATE
+> Task :flutter_local_notifications:generateDebugRFile UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:compileDebugLibraryResources UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:parseDebugLocalResources UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:generateDebugRFile UP-TO-DATE
+> Task :geolocator_android:compileDebugLibraryResources UP-TO-DATE
+> Task :geolocator_android:parseDebugLocalResources UP-TO-DATE
+> Task :geolocator_android:generateDebugRFile UP-TO-DATE
+> Task :package_info_plus:compileDebugLibraryResources UP-TO-DATE
+> Task :package_info_plus:parseDebugLocalResources UP-TO-DATE
+> Task :package_info_plus:generateDebugRFile UP-TO-DATE
+> Task :path_provider_android:compileDebugLibraryResources UP-TO-DATE
+> Task :path_provider_android:parseDebugLocalResources UP-TO-DATE
+> Task :path_provider_android:generateDebugRFile UP-TO-DATE
+> Task :printing:compileDebugLibraryResources UP-TO-DATE
+> Task :printing:parseDebugLocalResources UP-TO-DATE
+> Task :printing:generateDebugRFile UP-TO-DATE
+> Task :shared_preferences_android:compileDebugLibraryResources UP-TO-DATE
+> Task :shared_preferences_android:parseDebugLocalResources UP-TO-DATE
+> Task :shared_preferences_android:generateDebugRFile UP-TO-DATE
+> Task :url_launcher_android:compileDebugLibraryResources UP-TO-DATE
+> Task :url_launcher_android:parseDebugLocalResources UP-TO-DATE
+> Task :url_launcher_android:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app_links:javaPreCompileDebug UP-TO-DATE
+> Task :app_links:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app_links:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :file_picker:checkKotlinGradlePluginConfigurationErrors
+> Task :flutter_plugin_android_lifecycle:javaPreCompileDebug UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:compileDebugJavaWithJavac UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :file_picker:compileDebugKotlin UP-TO-DATE
+> Task :file_picker:javaPreCompileDebug UP-TO-DATE
+> Task :file_picker:compileDebugJavaWithJavac NO-SOURCE
+> Task :flutter_local_notifications:javaPreCompileDebug UP-TO-DATE
+> Task :file_picker:bundleLibCompileToJarDebug
+> Task :flutter_local_notifications:compileDebugJavaWithJavac UP-TO-DATE
+> Task :flutter_local_notifications:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :geolocator_android:javaPreCompileDebug UP-TO-DATE
+> Task :geolocator_android:compileDebugJavaWithJavac UP-TO-DATE
+> Task :geolocator_android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :package_info_plus:checkKotlinGradlePluginConfigurationErrors
+> Task :package_info_plus:javaPreCompileDebug UP-TO-DATE
+> Task :path_provider_android:javaPreCompileDebug UP-TO-DATE
+> Task :path_provider_android:compileDebugJavaWithJavac UP-TO-DATE
+> Task :path_provider_android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :printing:javaPreCompileDebug UP-TO-DATE
+> Task :printing:compileDebugJavaWithJavac UP-TO-DATE
+> Task :printing:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :shared_preferences_android:checkKotlinGradlePluginConfigurationErrors
+> Task :shared_preferences_android:compileDebugKotlin UP-TO-DATE
+> Task :shared_preferences_android:javaPreCompileDebug UP-TO-DATE
+
+> Task :package_info_plus:compileDebugKotlin FAILED
+e: Incompatible classes were found in dependencies. Remove them from the classpath or use '-Xskip-metadata-version-check' to suppress errors
+e: file:///C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/META-INF/kotlin-stdlib-jdk7.kotlin_moduleModule was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.2.0, expected version is 1.9.0.
+e: file:///C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/META-INF/kotlin-stdlib-jdk8.kotlin_moduleModule was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.2.0, expected version is 1.9.0.
+e: file:///C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/META-INF/kotlin-stdlib.kotlin_moduleModule was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.2.0, expected version is 1.9.0.
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:22:9 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:23:9 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:24:25 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:28:9 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:29:25 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:30:9 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:34:9 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:35:13 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:46:31 Unresolved reference: HashMap
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:48:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:49:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:50:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:51:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:52:49 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:53:51 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:54:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:55:21 Unresolved reference: put
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:56:26 Cannot infer a type for this parameter. Please specify it explicitly.
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:57:28 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:60:24 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:63:20 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:77:14 Class 'kotlin.Suppress' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Suppress.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:82:6 Class 'kotlin.Suppress' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Suppress.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:91:6 Class 'kotlin.Suppress' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Suppress.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:102:70 Unresolved reference: first
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:104:77 Unresolved reference: first
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:113:32 Unresolved reference: isNullOrEmpty
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:113:62 Unresolved reference: first
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:116:50 Unresolved reference: first
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:127:6 Class 'kotlin.jvm.Throws' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/jvm/Throws.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:130:16 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:142:25 Unresolved reference: indices
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:144:13 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:145:13 Class 'kotlin.Unit' was compiled with an incompatible version of Kotlin. The actual metadata version is 2.2.0, but the compiler version 1.9.0 can read versions up to 2.0.0.
+The class is loaded from C:/Users/Asus/.gradle/caches/8.10.2/transforms/f4ba7c784cd46dc6b51f14d62c2ec6aa/transformed/jetified-kotlin-stdlib-2.2.0.jar!/kotlin/Unit.class
+e: file:///C:/Users/Asus/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.1/android/src/main/kotlin/dev/fluttercommunity/plus/packageinfo/PackageInfoPlugin.kt:147:23 Too many arguments for public constructor String() defined in kotlin.String
+
+> Task :shared_preferences_android:compileDebugJavaWithJavac
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':package_info_plus:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 23s
+165 actionable tasks: 13 executed, 152 up-to-date

@@ -14,17 +14,21 @@ class GatePassProvider with ChangeNotifier {
 
   // Get pending requests
   List<GatePassModel> get pendingRequests =>
-      _requests.where((r) => r.status == 'pending').toList();
-
-  // Get approved requests (includes legacy warden_approved status)
-  List<GatePassModel> get approvedRequests => _requests
-      .where((r) => r.status == 'approved' || r.status == 'warden_approved')
-      .toList();
-
+      _requests.where((r) {
+        bool isRejected = r.status == 'rejected' || r.advisorStatus == 'rejected' || r.hodStatus == 'rejected' || r.wardenStatus == 'rejected';
+        return !isRejected && !r.isFinallyApproved;
+      }).toList();
+  
+  // Get approved requests
+  List<GatePassModel> get approvedRequests =>
+      _requests.where((r) => r.isFinallyApproved).toList();
+  
   // Get rejected requests
   List<GatePassModel> get rejectedRequests =>
-      _requests.where((r) => r.status == 'rejected').toList();
-
+      _requests.where((r) {
+        return r.status == 'rejected' || r.advisorStatus == 'rejected' || r.hodStatus == 'rejected' || r.wardenStatus == 'rejected';
+      }).toList();
+  
   Future<void> loadStudentRequests(String studentId) async {
     _isLoading = true;
     notifyListeners();

@@ -35,9 +35,12 @@ class _RequestCardState extends State<RequestCard> {
   @override
   Widget build(BuildContext context) {
     final req = widget.request;
+    final bool isExpired = req.fromDate.isBefore(DateTime.now()) && req.status != 'rejected';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: req.isFinallyApproved ? 4 : 2,
+      color: isExpired ? Colors.grey.shade100 : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: req.isFinallyApproved
@@ -483,9 +486,13 @@ class _RequestCardState extends State<RequestCard> {
     String text;
     IconData? icon;
 
-    // Use isFinallyApproved to correctly handle both 'approved' and
-    // legacy 'warden_approved' DB records with all 3 approvals done.
-    if (req.isFinallyApproved) {
+    final bool isExpired = req.fromDate.isBefore(DateTime.now()) && req.status != 'rejected';
+
+    if (isExpired) {
+      color = Colors.grey.shade600;
+      text = 'Expired';
+      icon = Icons.timer_off;
+    } else if (req.isFinallyApproved) {
       color = const Color(0xFF059669);
       text = 'Gate Pass Granted';
       icon = Icons.verified_rounded;

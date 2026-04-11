@@ -409,6 +409,18 @@ class _WardenDashboardState extends State<WardenDashboard> {
                       style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ),
+                  if (authProvider.userProfile?.hostelName != null &&
+                      authProvider.userProfile!.hostelName!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      authProvider.userProfile!.hostelName!,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

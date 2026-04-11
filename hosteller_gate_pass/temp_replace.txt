@@ -1,0 +1,19 @@
+                            // Dashed line at the boundary
+                            SizedBox(
+                              width: 1,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Flex(
+                                    direction: Axis.vertical,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: List.generate(
+                                      (constraints.constrainHeight() / 8).floor(),
+                                      (index) => SizedBox(
+                                        width: 1, height: 4,
+                                        child: DecoratedBox(decoration: BoxDecoration(color: Colors.grey[400])),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
@@ -8,7 +9,6 @@ import '../shared/common_settings_screen.dart';
 import 'manage_students_screen.dart';
 import 'add_student_screen.dart';
 import 'bulk_upload_students_screen.dart';
-import '../shared/student_gate_pass_history_screen.dart';
 
 class AdvisorDashboard extends StatefulWidget {
   const AdvisorDashboard({Key? key}) : super(key: key);
@@ -18,86 +18,151 @@ class AdvisorDashboard extends StatefulWidget {
 }
 
 class _AdvisorDashboardState extends State<AdvisorDashboard> {
-  // 0 = Home, 1 = Pending, 2 = Active, 3 = Completed, 4 = Manage Students, 5 = Add Student, 6 = Bulk Add, 7 = Settings
+  // 0=Home 1=Pending 2=Active 3=Rejected 4=Students 5=AddStudent 6=Bulk 7=Settings
   int _selectedIndex = 0;
+  String _dashboardSearch = '';
+  final TextEditingController _dashboardSearchController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Defer data load until after the first frame to avoid
-    // setState() called during build errors.
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void dispose() {
+    _dashboardSearchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final gatePassProvider =
-        Provider.of<GatePassProvider>(context, listen: false);
-
-    if (authProvider.userProfile?.classId != null) {
-      await gatePassProvider.loadAdvisorRequests(
-        classId: authProvider.userProfile!.classId!,
-        departmentId: authProvider.userProfile!.departmentId!,
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final gp = Provider.of<GatePassProvider>(context, listen: false);
+    if (auth.userProfile?.classId != null) {
+      await gp.loadAdvisorRequests(
+        classId: auth.userProfile!.classId!,
+        departmentId: auth.userProfile!.departmentId!,
       );
     }
   }
 
   String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
     return 'Good Evening';
   }
 
+  // ─────────────────── EXPIRED LOGIC ────────────────────────────────────────
+  // A pass is "expired" if fromDate is before now AND status is not rejected.
+  bool _isExpired(dynamic r) =>
+      r.fromDate.isBefore(DateTime.now()) && r.advisorStatus != 'rejected';
+
+  // ─────────────────── STATUS HELPERS ───────────────────────────────────────
+  Color _statusColor(dynamic r) {
+    if (_isExpired(r)) return Colors.grey;
+    switch (r.advisorStatus as String) {
+      case 'approved':
+        return AppConstants.primaryColor;
+      case 'rejected':
+        return AppConstants.rejectedColor;
+      default:
+        return const Color(0xFF3B82F6); // blue-500
+    }
+  }
+
+  String _statusLabel(dynamic r) {
+    if (_isExpired(r)) return 'Expired';
+    switch (r.advisorStatus as String) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Pending';
+    }
+  }
+
+  Color _cardBg(dynamic r) {
+    if (_isExpired(r)) return Colors.grey.withValues(alpha: 0.07);
+    switch (r.advisorStatus as String) {
+      case 'rejected':
+        return AppConstants.rejectedColor.withValues(alpha: 0.07);
+      default:
+        return AppConstants.primaryColor.withValues(alpha: 0.07);
+    }
+  }
+
+  Color _cardBorder(dynamic r) {
+    if (_isExpired(r)) return Colors.grey.withValues(alpha: 0.2);
+    switch (r.advisorStatus as String) {
+      case 'rejected':
+        return AppConstants.rejectedColor.withValues(alpha: 0.2);
+      default:
+        return AppConstants.primaryColor.withValues(alpha: 0.18);
+    }
+  }
+
+  // ─────────────────── BUILD ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final gatePassProvider = Provider.of<GatePassProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+    final gp = Provider.of<GatePassProvider>(context);
 
-    final pendingRequests = gatePassProvider.requests
-        .where((r) => r.advisorStatus == 'pending')
-        .toList();
+    final pendingRequests =
+        gp.requests.where((r) => r.advisorStatus == 'pending').toList();
+    final activeRequests =
+        gp.requests.where((r) => r.advisorStatus == 'approved').toList();
+    final rejectedRequests =
+        gp.requests.where((r) => r.advisorStatus == 'rejected').toList();
 
-    final activeRequests = gatePassProvider.requests
-        .where((r) => r.advisorStatus == 'approved')
-        .toList();
-
-    final completedRequests = gatePassProvider.requests
-        .where((r) =>
-            r.advisorStatus == 'rejected' || r.advisorStatus == 'completed')
-        .toList();
-
-    final fullName = authProvider.userProfile?.fullName ?? 'Advisor';
+    final fullName = auth.userProfile?.fullName ?? 'Advisor';
     final initials = fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A';
 
     Widget body;
     switch (_selectedIndex) {
       case 1:
-        body = _buildListPage(
+        body = _AdvisorListPage(
           title: 'Pending Requests',
           requests: pendingRequests,
-          type: 'pending',
           icon: Icons.pending_actions,
-          isLoading: gatePassProvider.isLoading,
+          isLoading: gp.isLoading,
+          onRefresh: _loadData,
+          isExpiredFn: _isExpired,
+          statusColorFn: _statusColor,
+          statusLabelFn: _statusLabel,
+          cardBgFn: _cardBg,
+          cardBorderFn: _cardBorder,
         );
         break;
       case 2:
-        body = _buildListPage(
+        body = _AdvisorListPage(
           title: 'Active Requests',
           requests: activeRequests,
-          type: 'active',
           icon: Icons.verified_outlined,
-          isLoading: gatePassProvider.isLoading,
+          isLoading: gp.isLoading,
+          onRefresh: _loadData,
+          isExpiredFn: _isExpired,
+          statusColorFn: _statusColor,
+          statusLabelFn: _statusLabel,
+          cardBgFn: _cardBg,
+          cardBorderFn: _cardBorder,
         );
         break;
       case 3:
-        body = _buildListPage(
-          title: 'Completed Requests',
-          requests: completedRequests,
-          type: 'completed',
-          icon: Icons.check_circle_outline,
-          isLoading: gatePassProvider.isLoading,
+        body = _AdvisorListPage(
+          title: 'Rejected Requests',
+          requests: rejectedRequests,
+          icon: Icons.cancel_outlined,
+          isLoading: gp.isLoading,
+          onRefresh: _loadData,
+          isExpiredFn: _isExpired,
+          statusColorFn: _statusColor,
+          statusLabelFn: _statusLabel,
+          cardBgFn: _cardBg,
+          cardBorderFn: _cardBorder,
         );
         break;
       case 4:
@@ -118,189 +183,198 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
         body = _buildHomePage(
           pendingCount: pendingRequests.length,
           activeCount: activeRequests.length,
-          completedCount: completedRequests.length,
-          isLoading: gatePassProvider.isLoading,
+          rejectedCount: rejectedRequests.length,
+          allRequests: gp.requests,
+          isLoading: gp.isLoading,
         );
     }
 
     return PopScope(
-      // Allow natural pop (exits app) only when on Home; otherwise go to Home.
       canPop: _selectedIndex == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        // On a sub-section ΓÇö go back to Home
         setState(() => _selectedIndex = 0);
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        drawer: _buildDrawer(context, authProvider, fullName, initials),
-        body: SafeArea(
-          child: Column(
-            children: [
-              if (_selectedIndex == 0)
-                _buildHeader(context, fullName, initials,
-                    pendingCount: pendingRequests.length),
-              Expanded(child: body),
-            ],
-          ),
+        backgroundColor: Colors.grey[50],
+        drawer: _buildDrawer(context, auth, fullName, initials),
+        body: Column(
+          children: [
+            if (_selectedIndex == 0)
+              _buildHeader(
+                context,
+                fullName,
+                pendingCount: pendingRequests.length,
+                activeCount: activeRequests.length,
+                rejectedCount: rejectedRequests.length,
+              ),
+            Expanded(child: body),
+          ],
         ),
       ),
     );
   }
 
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ TOP HEADER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-
-  Widget _buildHeader(BuildContext context, String fullName, String initials,
-      {int pendingCount = 0}) {
+  // ─────────────────── HEADER ────────────────────────────────────────────────
+  Widget _buildHeader(
+    BuildContext context,
+    String fullName, {
+    int pendingCount = 0,
+    int activeCount = 0,
+    int rejectedCount = 0,
+  }) {
     final hasPending = pendingCount > 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.white,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppConstants.primaryColor,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          20, MediaQuery.of(context).padding.top + 20, 10, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hamburger menu
-              Builder(
-                builder: (ctx) => GestureDetector(
-                  onTap: () => Scaffold.of(ctx).openDrawer(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F4FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.menu,
-                        color: AppConstants.primaryColor, size: 22),
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: Text(
+                  DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
                 ),
               ),
-              const SizedBox(width: 12),
-              // Search bar
-              Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F4FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search requests...',
-                      hintStyle:
-                          TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                      prefixIcon: Icon(Icons.search,
-                          color: Color(0xFF94A3B8), size: 20),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Notification bell ΓÇö red dot only when pending passes exist
-              GestureDetector(
-                onTap: () {
-                  // Navigate to Pending Requests section
-                  setState(() => _selectedIndex = 1);
-                },
-                child: Stack(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F4FF),
-                        borderRadius: BorderRadius.circular(10),
+              Row(
+                children: [
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none,
+                            color: Colors.white),
+                        onPressed: () => setState(() => _selectedIndex = 1),
                       ),
-                      child: const Icon(Icons.notifications_outlined,
-                          color: AppConstants.primaryColor, size: 22),
-                    ),
-                    if (hasPending)
-                      Positioned(
-                        right: 6,
-                        top: 6,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
-                            shape: BoxShape.circle,
+                      if (hasPending)
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                                color: Color(0xFFEF4444),
+                                shape: BoxShape.circle),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Avatar
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppConstants.primaryColor,
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
+                    ],
+                  ),
+                  Builder(
+                    builder: (ctx) => IconButton(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      onPressed: () => Scaffold.of(ctx).openDrawer(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-
-          const SizedBox(height: 14),
-          // Greeting
+          const SizedBox(height: 8),
           Text(
-            _getGreeting(),
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748B),
-              fontStyle: FontStyle.italic,
+            '${_getGreeting()},',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 36,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 8),
           Text(
-            'Welcome, $fullName!',
+            fullName,
             style: const TextStyle(
-              fontSize: 22,
+              color: Colors.white,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1E3A8A),
+              letterSpacing: 0.5,
             ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem('Pending\nRequests', pendingCount.toString(),
+                  () => setState(() => _selectedIndex = 1)),
+              Container(
+                  height: 40,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.2)),
+              _buildStatItem('Active\nRequests', activeCount.toString(),
+                  () => setState(() => _selectedIndex = 2)),
+              Container(
+                  height: 40,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.2)),
+              _buildStatItem('Rejected\nRequests', rejectedCount.toString(),
+                  () => setState(() => _selectedIndex = 3)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ DRAWER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Widget _buildStatItem(String label, String value, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            Text(
+              value == '0' ? '0' : value.padLeft(2, '0'),
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF8DE8C4),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  // ─────────────────── DRAWER ────────────────────────────────────────────────
   Widget _buildDrawer(BuildContext context, AuthProvider authProvider,
       String fullName, String initials) {
     return Drawer(
       child: Container(
-        color: Colors.white,
+        color: AppConstants.primaryColor,
         child: Column(
           children: [
-            // Drawer header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 50, 20, 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppConstants.primaryColor,
-                    AppConstants.secondaryColor,
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 28),
+              color: AppConstants.primaryColor,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Colors.white.withOpacity(0.3),
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
                     child: Text(
                       initials,
                       style: const TextStyle(
@@ -322,7 +396,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
@@ -334,84 +408,81 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
               ),
             ),
             const SizedBox(height: 8),
-            // Nav items
             _drawerItem(
-              icon: Icons.home_outlined,
-              activeIcon: Icons.home,
-              label: 'Home',
-              index: 0,
-            ),
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: 'Home',
+                index: 0),
             _drawerItem(
-              icon: Icons.pending_actions_outlined,
-              activeIcon: Icons.pending_actions,
-              label: 'Pending Request',
-              index: 1,
-            ),
+                icon: Icons.pending_actions_outlined,
+                activeIcon: Icons.pending_actions,
+                label: 'Pending Request',
+                index: 1),
             _drawerItem(
-              icon: Icons.verified_outlined,
-              activeIcon: Icons.verified,
-              label: 'Active Request',
-              index: 2,
-            ),
+                icon: Icons.verified_outlined,
+                activeIcon: Icons.verified,
+                label: 'Active Request',
+                index: 2),
             _drawerItem(
-              icon: Icons.check_circle_outline,
-              activeIcon: Icons.check_circle,
-              label: 'Completed Request',
-              index: 3,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(height: 24),
+                icon: Icons.cancel_outlined,
+                activeIcon: Icons.cancel,
+                label: 'Rejected Request',
+                index: 3),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(
+                  height: 24, color: Colors.white.withValues(alpha: 0.15)),
             ),
             _drawerItem(
-              icon: Icons.people_outlined,
-              activeIcon: Icons.people,
-              label: 'Manage Students',
-              index: 4,
+                icon: Icons.people_outlined,
+                activeIcon: Icons.people,
+                label: 'Manage Students',
+                index: 4),
+            _drawerItem(
+                icon: Icons.person_add_outlined,
+                activeIcon: Icons.person_add,
+                label: 'Add a Student',
+                index: 5),
+            _drawerItem(
+                icon: Icons.upload_file_outlined,
+                activeIcon: Icons.upload_file,
+                label: 'Bulk Add',
+                index: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(
+                  height: 24, color: Colors.white.withValues(alpha: 0.15)),
             ),
             _drawerItem(
-              icon: Icons.person_add_outlined,
-              activeIcon: Icons.person_add,
-              label: 'Add a Student',
-              index: 5,
-            ),
-            _drawerItem(
-              icon: Icons.upload_file_outlined,
-              activeIcon: Icons.upload_file,
-              label: 'Bulk Add',
-              index: 6,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(height: 24),
-            ),
-            _drawerItem(
-              icon: Icons.settings_outlined,
-              activeIcon: Icons.settings,
-              label: 'Settings',
-              index: 7,
-            ),
+                icon: Icons.settings_outlined,
+                activeIcon: Icons.settings,
+                label: 'Settings',
+                index: 7),
             const Spacer(),
-            // Logout
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child:
+                      const Icon(Icons.logout, color: Colors.white70, size: 20),
                 ),
-                child: const Icon(Icons.logout,
-                    color: Color(0xFFEF4444), size: 20),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(
+                      color: Colors.white70, fontWeight: FontWeight.w600),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await authProvider.signOut();
+                },
               ),
-              title: const Text(
-                'Logout',
-                style: TextStyle(
-                    color: Color(0xFFEF4444), fontWeight: FontWeight.w600),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await authProvider.signOut();
-              },
             ),
             const SizedBox(height: 20),
           ],
@@ -428,36 +499,29 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
   }) {
     final isSelected = _selectedIndex == index;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.only(right: 20, bottom: 4),
       child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+          ),
+        ),
         tileColor: isSelected
-            ? AppConstants.primaryColor.withOpacity(0.08)
+            ? Colors.white.withValues(alpha: 0.15)
             : Colors.transparent,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppConstants.primaryColor.withOpacity(0.15)
-                : const Color(0xFFF0F4FF),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            isSelected ? activeIcon : icon,
-            color: isSelected
-                ? AppConstants.primaryColor
-                : const Color(0xFF64748B),
-            size: 20,
-          ),
+        leading: Icon(
+          isSelected ? activeIcon : icon,
+          color: isSelected ? const Color(0xFF8DE8C4) : Colors.white70,
+          size: 22,
         ),
         title: Text(
           label,
           style: TextStyle(
-            color: isSelected
-                ? AppConstants.primaryColor
-                : const Color(0xFF334155),
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            fontSize: 14,
+            color: isSelected ? Colors.white : Colors.white70,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+            fontSize: 15,
+            letterSpacing: 0.3,
           ),
         ),
         onTap: () {
@@ -468,98 +532,375 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     );
   }
 
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ HOME PAGE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-
+  // ─────────────────── HOME PAGE ─────────────────────────────────────────────
   Widget _buildHomePage({
     required int pendingCount,
     required int activeCount,
-    required int completedCount,
+    required int rejectedCount,
+    required List allRequests,
     required bool isLoading,
   }) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final filtered = _dashboardSearch.isEmpty
+        ? allRequests
+        : allRequests.where((r) {
+            final q = _dashboardSearch.toLowerCase();
+            return (r.studentName ?? '').toLowerCase().contains(q) ||
+                r.reason.toLowerCase().contains(q) ||
+                r.destination.toLowerCase().contains(q) ||
+                (r.className ?? '').toLowerCase().contains(q) ||
+                (r.departmentName ?? '').toLowerCase().contains(q);
+          }).toList();
+
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
         children: [
-          const Text(
-            'Overview',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppConstants.primaryColor,
-              fontStyle: FontStyle.italic,
+          // ── Search bar ──────────────────────────────────────────────────
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 14),
+                Icon(Icons.search, color: Colors.grey[400], size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _dashboardSearchController,
+                    onChanged: (v) => setState(() => _dashboardSearch = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search students or pass history...',
+                      hintStyle:
+                          TextStyle(color: Colors.grey[400], fontSize: 14),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                if (_dashboardSearch.isNotEmpty)
+                  IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[400], size: 18),
+                    onPressed: () {
+                      _dashboardSearchController.clear();
+                      setState(() => _dashboardSearch = '');
+                    },
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          _buildSummaryCard(
-            label: 'Pending Requests',
-            count: pendingCount,
-            icon: Icons.pending_actions,
-            color: const Color(0xFFF59E0B),
-            bgColor: const Color(0xFFFFFBEB),
-            onTap: () => setState(() => _selectedIndex = 1),
-          ),
-          const SizedBox(height: 14),
-          _buildSummaryCard(
-            label: 'Active Requests',
-            count: activeCount,
-            icon: Icons.verified_outlined,
-            color: const Color(0xFF10B981),
-            bgColor: const Color(0xFFECFDF5),
-            onTap: () => setState(() => _selectedIndex = 2),
-          ),
-          const SizedBox(height: 14),
-          _buildSummaryCard(
-            label: 'Completed Requests',
-            count: completedCount,
-            icon: Icons.check_circle_outline,
-            color: AppConstants.primaryColor,
-            bgColor: const Color(0xFFEFF6FF),
-            onTap: () => setState(() => _selectedIndex = 3),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF334155),
+
+          const SizedBox(height: 20),
+
+          // ── Tiles (only when not searching) ─────────────────────────────
+          if (_dashboardSearch.isEmpty) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSelectionCard(
+                    title: 'Add Student',
+                    subtitle: 'Enroll a new student',
+                    icon: Icons.person_add_outlined,
+                    iconBgColor:
+                        AppConstants.primaryColor.withValues(alpha: 0.1),
+                    iconColor: AppConstants.primaryColor,
+                    onTap: () => setState(() => _selectedIndex = 5),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSelectionCard(
+                    title: 'Bulk Upload',
+                    subtitle: 'Upload class list',
+                    icon: Icons.upload_file_outlined,
+                    iconBgColor: Colors.teal.withValues(alpha: 0.1),
+                    iconColor: Colors.teal,
+                    onTap: () => setState(() => _selectedIndex = 6),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _quickActionButton(
-                  icon: Icons.pending_actions,
-                  label: 'Review Pending',
-                  onTap: () => setState(() => _selectedIndex = 1),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSelectionCard(
+                    title: 'Students',
+                    subtitle: 'Manage your class',
+                    icon: Icons.people_outlined,
+                    iconBgColor: Colors.purple.withValues(alpha: 0.1),
+                    iconColor: Colors.purple,
+                    onTap: () => setState(() => _selectedIndex = 4),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSelectionCard(
+                    title: 'Pending',
+                    subtitle: 'Review requests',
+                    icon: Icons.pending_actions,
+                    iconBgColor: Colors.orange.withValues(alpha: 0.1),
+                    iconColor: Colors.orange,
+                    onTap: () => setState(() => _selectedIndex = 1),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Recent Requests',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ] else ...[
+            Text(
+              'Results for "$_dashboardSearch"',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ── Cards ────────────────────────────────────────────────────────
+          if (filtered.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 32),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.search_off, size: 56, color: Colors.grey[300]),
+                    const SizedBox(height: 12),
+                    Text(
+                      _dashboardSearch.isEmpty
+                          ? 'No requests yet'
+                          : 'No results for "$_dashboardSearch"',
+                      style:
+                          TextStyle(color: Colors.grey[500], fontSize: 15),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _quickActionButton(
-                  icon: Icons.refresh,
-                  label: 'Refresh Data',
-                  onTap: _loadData,
-                ),
-              ),
-            ],
-          ),
+            )
+          else
+            ...filtered.map((r) => _buildPassCard(r)),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard({
+  // ─────────────────── PASS CARD (home) ──────────────────────────────────────
+  Widget _buildPassCard(dynamic r) {
+    final Color sc = _statusColor(r);
+    final Color bg = _cardBg(r);
+    final Color border = _cardBorder(r);
+    final bool expired = _isExpired(r);
+    final String label = _statusLabel(r);
+
+    return GestureDetector(
+      onTap: () => _showPassDetail(context, r),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration:
+                      BoxDecoration(color: sc, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    r.studentName ?? 'Student',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: expired ? Colors.grey[600] : Colors.grey[900],
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: sc.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.bold, color: sc),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              r.reason,
+              style: TextStyle(
+                fontSize: 14,
+                color: expired ? Colors.grey[500] : Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    r.destination,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.calendar_today_outlined,
+                    size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Text(
+                  '${DateFormat('MMM dd').format(r.fromDate)} – ${DateFormat('MMM dd').format(r.toDate)}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+            if (r.advisorStatus == 'pending' && !expired) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _actionBtn(
+                    label: 'Reject',
+                    color: AppConstants.rejectedColor,
+                    icon: Icons.close,
+                    onPressed: () => _showFullCard(context, r),
+                  ),
+                  const SizedBox(width: 8),
+                  _actionBtn(
+                    label: 'Approve',
+                    color: AppConstants.successColor,
+                    icon: Icons.check,
+                    onPressed: () => _showFullCard(context, r),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionBtn({
     required String label,
-    required int count,
-    required IconData icon,
     required Color color,
-    required Color bgColor,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 14, color: Colors.white),
+      label: Text(label,
+          style: const TextStyle(fontSize: 12, color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 0,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
+  void _showPassDetail(BuildContext context, dynamic r) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(8),
+        child: RequestCard(
+          request: r,
+          isAdvisor: true,
+          onActionComplete: _loadData,
+        ),
+      ),
+    );
+  }
+
+  void _showFullCard(BuildContext context, dynamic r) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(8),
+        child: RequestCard(
+          request: r,
+          isAdvisor: true,
+          onActionComplete: () {
+            Navigator.pop(context);
+            _loadData();
+          },
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────── SELECTION CARD ────────────────────────────────────────
+  Widget _buildSelectionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -568,118 +909,367 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 28),
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(14)),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios,
-                size: 16, color: Colors.grey.shade400),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _quickActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18, color: AppConstants.primaryColor),
-      label: Text(
-        label,
-        style: const TextStyle(color: AppConstants.primaryColor, fontSize: 13),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        side: const BorderSide(color: AppConstants.primaryColor),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+// ──────────────── LIST PAGE ────────────────────────────────────────────────────
+/// Separate stateful widget so each list page has its own independent search.
+class _AdvisorListPage extends StatefulWidget {
+  final String title;
+  final List requests;
+  final IconData icon;
+  final bool isLoading;
+  final Future<void> Function() onRefresh;
+  final bool Function(dynamic) isExpiredFn;
+  final Color Function(dynamic) statusColorFn;
+  final String Function(dynamic) statusLabelFn;
+  final Color Function(dynamic) cardBgFn;
+  final Color Function(dynamic) cardBorderFn;
+
+  const _AdvisorListPage({
+    required this.title,
+    required this.requests,
+    required this.icon,
+    required this.isLoading,
+    required this.onRefresh,
+    required this.isExpiredFn,
+    required this.statusColorFn,
+    required this.statusLabelFn,
+    required this.cardBgFn,
+    required this.cardBorderFn,
+  });
+
+  @override
+  State<_AdvisorListPage> createState() => _AdvisorListPageState();
+}
+
+class _AdvisorListPageState extends State<_AdvisorListPage> {
+  String _search = '';
+  final TextEditingController _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
   }
 
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ LIST PAGE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-
-  Widget _buildListPage({
-    required String title,
-    required List requests,
-    required String type,
-    required IconData icon,
-    required bool isLoading,
-  }) {
-    if (isLoading) {
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (requests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              'No $title found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-          ],
+    final filtered = _search.isEmpty
+        ? widget.requests
+        : widget.requests.where((r) {
+            final q = _search.toLowerCase();
+            return (r.studentName ?? '').toLowerCase().contains(q) ||
+                r.reason.toLowerCase().contains(q) ||
+                r.destination.toLowerCase().contains(q) ||
+                (r.className ?? '').toLowerCase().contains(q);
+          }).toList();
+
+    return Column(
+      children: [
+        // ── Header with search bar ──────────────────────────────────────
+        Container(
+          color: Colors.grey[50],
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.primaryColor,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    Icon(Icons.search, color: Colors.grey[400], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _ctrl,
+                        onChanged: (v) => setState(() => _search = v),
+                        decoration: InputDecoration(
+                          hintText: 'Search passes or students...',
+                          hintStyle:
+                              TextStyle(color: Colors.grey[400], fontSize: 13),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    if (_search.isNotEmpty)
+                      IconButton(
+                        icon: Icon(Icons.clear,
+                            color: Colors.grey[400], size: 18),
+                        onPressed: () {
+                          _ctrl.clear();
+                          setState(() => _search = '');
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ── Content ────────────────────────────────────────────────────
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(widget.icon, size: 80, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      Text(
+                        _search.isEmpty
+                            ? 'No ${widget.title} found'
+                            : 'No results for "$_search"',
+                        style:
+                            TextStyle(fontSize: 16, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: widget.onRefresh,
+                  color: AppConstants.primaryColor,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final r = filtered[index];
+                      return _buildListCard(context, r);
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListCard(BuildContext context, dynamic r) {
+    final bool expired = widget.isExpiredFn(r);
+    final Color sc = widget.statusColorFn(r);
+    final String label = widget.statusLabelFn(r);
+    final Color bg = widget.cardBgFn(r);
+    final Color border = widget.cardBorderFn(r);
+
+    void showDetail() {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (_) => Padding(
+          padding: const EdgeInsets.all(8),
+          child: RequestCard(
+            request: r,
+            isAdvisor: true,
+            onActionComplete: () {
+              Navigator.pop(context);
+              widget.onRefresh();
+            },
+          ),
         ),
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      color: const Color(0xFF2563EB),
-      child: ListView.builder(
+    return GestureDetector(
+      onTap: showDetail,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        itemCount: requests.length,
-        itemBuilder: (context, index) {
-          final request = requests[index];
-          return RequestCard(
-            request: request,
-            isAdvisor: true,
-            onActionComplete: _loadData,
-          );
-        },
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration:
+                      BoxDecoration(color: sc, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    r.studentName ?? 'Student',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: expired ? Colors.grey[600] : Colors.grey[900],
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: sc.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.bold, color: sc),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              r.reason,
+              style: TextStyle(
+                fontSize: 14,
+                color: expired ? Colors.grey[500] : Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    r.destination,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.calendar_today_outlined,
+                    size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Text(
+                  '${DateFormat('MMM dd').format(r.fromDate)} – ${DateFormat('MMM dd').format(r.toDate)}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+            if (r.advisorStatus == 'pending' && !expired) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _btn(
+                    label: 'Reject',
+                    color: AppConstants.rejectedColor,
+                    icon: Icons.close,
+                    onPressed: showDetail,
+                  ),
+                  const SizedBox(width: 8),
+                  _btn(
+                    label: 'Approve',
+                    color: AppConstants.successColor,
+                    icon: Icons.check,
+                    onPressed: showDetail,
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _btn({
+    required String label,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 14, color: Colors.white),
+      label:
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 0,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }

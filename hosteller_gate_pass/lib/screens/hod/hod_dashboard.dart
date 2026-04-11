@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
@@ -37,6 +38,13 @@ class _HodDashboardState extends State<HodDashboard>
     }
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -56,15 +64,33 @@ class _HodDashboardState extends State<HodDashboard>
         ? (allRequests.first.departmentName ?? 'Department')
         : 'Department';
 
+    final fullName = authProvider.userProfile?.fullName ?? 'HOD';
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: AppConstants.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'HOD Dashboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 11,
+              ),
+            ),
+            const Text(
+              'HOD Dashboard',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -76,7 +102,8 @@ class _HodDashboardState extends State<HodDashboard>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF059669),
+          indicatorColor: const Color(0xFF8DE8C4),
+          indicatorWeight: 3,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white60,
           tabs: const [
@@ -88,15 +115,14 @@ class _HodDashboardState extends State<HodDashboard>
       ),
       body: Column(
         children: [
-          // Stats header
+          // Stats header â€” styled to match Student Dashboard theme
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF064E3B), Color(0xFF059669)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+            decoration: BoxDecoration(
+              color: AppConstants.primaryColor,
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(30),
               ),
             ),
             child: Row(
@@ -106,7 +132,15 @@ class _HodDashboardState extends State<HodDashboard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Welcome, ${authProvider.userProfile?.fullName ?? "HOD"}',
+                        '${_getGreeting()},',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        fullName,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -116,23 +150,25 @@ class _HodDashboardState extends State<HodDashboard>
                       const SizedBox(height: 6),
                       Text(
                         'Pending Approvals: ${pendingHodRequests.length}',
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                // Stat chips
+                // Stat chips â€” content unchanged
                 _headerStatChip(
                   '${allRequests.length}',
                   'Total',
-                  Colors.white.withOpacity(0.25),
+                  Colors.white.withValues(alpha: 0.15),
                 ),
                 const SizedBox(width: 8),
                 _headerStatChip(
                   '${allRequests.where((r) => r.isFinallyApproved).length}',
                   'Granted',
-                  const Color(0xFF10B981).withOpacity(0.4),
+                  const Color(0xFF8DE8C4).withValues(alpha: 0.3),
                 ),
               ],
             ),
@@ -142,7 +178,7 @@ class _HodDashboardState extends State<HodDashboard>
             child: gatePassProvider.isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
-                        color: Color(0xFF059669)))
+                        color: AppConstants.primaryColor))
                 : TabBarView(
                     controller: _tabController,
                     children: [
@@ -158,7 +194,7 @@ class _HodDashboardState extends State<HodDashboard>
                           : const Center(
                               child: Text(
                                 'Department not assigned',
-                                style: TextStyle(color: Colors.white70),
+                                style: TextStyle(color: Colors.grey),
                               ),
                             ),
                     ],
@@ -171,10 +207,10 @@ class _HodDashboardState extends State<HodDashboard>
 
   Widget _headerStatChip(String value, String label, Color bg) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
@@ -183,12 +219,16 @@ class _HodDashboardState extends State<HodDashboard>
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 20,
             ),
           ),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 11),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -201,7 +241,7 @@ class _HodDashboardState extends State<HodDashboard>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 80, color: Colors.grey[700]),
+            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
               isPending ? 'No pending approvals' : 'No requests found',
@@ -214,7 +254,7 @@ class _HodDashboardState extends State<HodDashboard>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: const Color(0xFF059669),
+      color: AppConstants.primaryColor,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: requests.length,
@@ -236,3 +276,4 @@ class _HodDashboardState extends State<HodDashboard>
     super.dispose();
   }
 }
+

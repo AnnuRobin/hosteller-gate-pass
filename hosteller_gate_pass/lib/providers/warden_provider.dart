@@ -11,6 +11,10 @@ class WardenProvider with ChangeNotifier {
   List<GatePassModel> get requests => _requests;
   bool get isLoading => _isLoading;
 
+  // Get rejected passes
+  List<GatePassModel> get rejectedRequests =>
+      _requests.where((r) => r.wardenStatus == 'rejected').toList();
+
   // Get pending requests (HOD approved, waiting for warden)
   List<GatePassModel> get pendingWardenRequests => _requests
       .where((r) => r.hodStatus == 'approved' && r.wardenStatus == 'pending')

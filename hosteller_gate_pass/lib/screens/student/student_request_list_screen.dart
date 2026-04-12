@@ -32,7 +32,16 @@ class StudentRequestListScreen extends StatelessWidget {
               requests = gatePassProvider.approvedRequests;
               break;
             case StudentRequestListType.pending:
-              requests = gatePassProvider.pendingRequests;
+              final now = DateTime.now();
+              requests = List.from(gatePassProvider.pendingRequests);
+              requests.sort((a, b) {
+                final isExpiredA = a.fromDate.isBefore(now);
+                final isExpiredB = b.fromDate.isBefore(now);
+                if (isExpiredA != isExpiredB) {
+                  return isExpiredA ? 1 : -1; // Live passes first
+                }
+                return b.createdAt.compareTo(a.createdAt); // Secondary sort by latest created
+              });
               break;
             case StudentRequestListType.rejected:
               requests = gatePassProvider.rejectedRequests;
@@ -43,7 +52,7 @@ class StudentRequestListScreen extends StatelessWidget {
             case StudentRequestListType.active:
               final now = DateTime.now();
               requests = gatePassProvider.requests
-                  .where((r) => r.isFinallyApproved && !r.toDate.isBefore(now))
+                  .where((r) => r.isFinallyApproved && !r.fromDate.isBefore(now))
                   .toList();
               break;
           }

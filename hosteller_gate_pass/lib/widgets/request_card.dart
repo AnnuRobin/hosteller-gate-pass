@@ -36,134 +36,123 @@ class _RequestCardState extends State<RequestCard> {
   Widget build(BuildContext context) {
     final req = widget.request;
     final bool isExpired = req.fromDate.isBefore(DateTime.now()) && req.status != 'rejected';
+    
+    Color sc;
+    String label;
+    Color bg;
+    Color border;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: req.isFinallyApproved ? 4 : 2,
-      color: isExpired ? Colors.grey.shade100 : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: req.isFinallyApproved
-            ? const BorderSide(color: Color(0xFFFBBF24), width: 1.5)
-            : BorderSide.none,
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _showRequestDetails(context),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          req.studentName ?? 'Student',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          req.reason,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+    if (isExpired) {
+      sc = Colors.grey;
+      label = 'Expired';
+      bg = Colors.grey.withOpacity(0.07);
+      border = Colors.grey.withOpacity(0.2);
+    } else if (req.isFinallyApproved) {
+      sc = AppConstants.successColor;
+      label = 'Gate Pass Granted';
+      bg = AppConstants.successColor.withOpacity(0.07);
+      border = AppConstants.successColor.withOpacity(0.18);
+    } else if (req.status == 'rejected') {
+      sc = AppConstants.rejectedColor;
+      label = 'Rejected';
+      bg = AppConstants.rejectedColor.withOpacity(0.07);
+      border = AppConstants.rejectedColor.withOpacity(0.2);
+    } else {
+      sc = const Color(0xFF3B82F6);
+      label = 'Pending';
+      bg = const Color(0xFF3B82F6).withOpacity(0.07);
+      border = const Color(0xFF3B82F6).withOpacity(0.18);
+    }
+
+    return GestureDetector(
+      onTap: () => _showRequestDetails(context),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: sc, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    req.studentName ?? 'Student',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isExpired ? Colors.grey[600] : Colors.grey[900],
                     ),
                   ),
-                  _buildStatusBadge(req),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoRow(
-                        Icons.class_, req.className ?? req.classId),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: sc.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  Expanded(
-                    child: _buildInfoRow(Icons.domain,
-                        req.departmentName ?? req.departmentId),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.bold, color: sc),
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              _buildInfoRow(Icons.location_on, req.destination),
-              const SizedBox(height: 4),
-              _buildInfoRow(
-                Icons.calendar_today,
-                '${DateFormat('MMM dd').format(req.fromDate)} - ${DateFormat('MMM dd').format(req.toDate)}',
-              ),
-              const SizedBox(height: 12),
-              _buildApprovalProgress(req),
-              const SizedBox(height: 12),
-              // Token banner — only shown in student view when fully approved
-              if (req.isFinallyApproved &&
-                  !widget.isAdvisor &&
-                  !widget.isHod &&
-                  !widget.isWarden)
-                _buildTokenBanner(context, req),
-              _buildActionButtons(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTokenBanner(BuildContext context, GatePassModel req) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GatePassTokenScreen(request: req),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF064E3B), Color(0xFF059669), Color(0xFF34D399)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.verified_rounded, color: Colors.white, size: 18),
-            SizedBox(width: 8),
-            Text(
-              '✓  Gate Pass Token Issued — Tap to View',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.3,
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 8),
+            Text(
+              req.reason,
+              style: TextStyle(
+                fontSize: 14,
+                color: isExpired ? Colors.grey[500] : Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    req.destination,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildApprovalProgress(req),
+            const SizedBox(height: 12),
+            _buildActionButtons(),
           ],
         ),
       ),
     );
   }
+
+
 
   Widget _buildActionButtons() {
     if (widget.isAdvisor && widget.request.advisorStatus == 'pending') {
@@ -481,97 +470,6 @@ class _RequestCardState extends State<RequestCard> {
     }
   }
 
-  Widget _buildStatusBadge(GatePassModel req) {
-    Color color;
-    String text;
-    IconData? icon;
-
-    final bool isExpired = req.fromDate.isBefore(DateTime.now()) && req.status != 'rejected';
-
-    if (isExpired) {
-      color = Colors.grey.shade600;
-      text = 'Expired';
-      icon = Icons.timer_off;
-    } else if (req.isFinallyApproved) {
-      color = const Color(0xFF059669);
-      text = 'Gate Pass Granted';
-      icon = Icons.verified_rounded;
-    } else {
-      switch (req.status) {
-        case 'pending':
-          color = AppConstants.pendingColor;
-          text = 'Pending';
-          break;
-        case 'advisor_approved':
-          color = Colors.blue;
-          text = 'Advisor Approved';
-          break;
-        case 'hod_approved':
-          color = Colors.indigo;
-          text = 'HOD Approved';
-          break;
-        case 'warden_approved':
-          // Partial warden_approved (missing some prior approvals — edge case)
-          color = Colors.teal;
-          text = 'Warden Approved';
-          break;
-        case 'approved':
-          // HOD-approved state (warden not yet approved)
-          color = AppConstants.approvedColor;
-          text = 'HOD Approved';
-          break;
-        case 'rejected':
-          color = AppConstants.rejectedColor;
-          text = 'Rejected';
-          break;
-        default:
-          color = Colors.grey;
-          text = 'Unknown';
-      }
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: color, size: 13),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            text,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildApprovalProgress(GatePassModel request) {
     return Row(
       children: [
@@ -601,16 +499,20 @@ class _RequestCardState extends State<RequestCard> {
   Widget _buildProgressStep(String label, String status) {
     Color color;
     IconData icon;
+    Color textColor;
 
     if (status == 'approved') {
       color = AppConstants.approvedColor;
       icon = Icons.check_circle;
+      textColor = color;
     } else if (status == 'rejected') {
       color = AppConstants.rejectedColor;
       icon = Icons.cancel;
+      textColor = color;
     } else {
-      color = Colors.grey[300]!;
+      color = Colors.grey[400]!;
       icon = Icons.radio_button_unchecked;
+      textColor = Colors.black;
     }
 
     return Column(
@@ -619,7 +521,7 @@ class _RequestCardState extends State<RequestCard> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: color),
+          style: TextStyle(fontSize: 12, color: textColor),
         ),
       ],
     );
@@ -674,34 +576,26 @@ class _RequestCardState extends State<RequestCard> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF064E3B),
-                          Color(0xFF059669),
-                          Color(0xFF34D399)
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: const Color(0xFF10B981).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.verified_rounded,
-                            color: Colors.white, size: 22),
+                            color: Color(0xFF059669), size: 22),
                         SizedBox(width: 10),
                         Text(
                           'View Full Gate Pass Token',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF059669),
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(width: 6),
                         Icon(Icons.arrow_forward_ios,
-                            color: Colors.white70, size: 14),
+                            color: Color(0xFF059669), size: 14),
                       ],
                     ),
                   ),

@@ -11,6 +11,9 @@ import 'edit_user_screen.dart';
 import 'audit_logs_screen.dart';
 import 'bulk_create_class_screen.dart';
 import 'create_user_screen.dart';
+import 'advisors_list_page.dart';
+import 'hods_list_page.dart';
+import 'user_details_page.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -262,7 +265,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _buildStatItem(
                 'HODs',
                 hodCount.toString(),
-                () => setState(() => _searchQuery = 'hod'),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HodsListPage()),
+                ).then((_) => _loadUsers()),
               ),
               Container(
                   height: 40,
@@ -271,7 +277,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _buildStatItem(
                 'Advisors',
                 advisorCount.toString(),
-                () => setState(() => _searchQuery = 'advisor'),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdvisorsListPage()),
+                ).then((_) => _loadUsers()),
               ),
             ],
           ),
@@ -563,16 +572,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   u.hostelName!.toLowerCase().trim() ==
                                       hostelName.toLowerCase().trim())
                               .toList();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  _buildHostelWardenDetailsPage(
-                                hostelName,
-                                hostelWardens,
+
+                          if (hostelWardens.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserDetailsPage(user: hostelWardens.first),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('No warden assigned to $hostelName'),
+                                backgroundColor: AppConstants.warningColor,
+                              ),
+                            );
+                          }
                         },
                         contentPadding: const EdgeInsets.all(16),
                         leading: Container(
@@ -604,86 +619,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return const CommonSettingsScreen();
   }
 
-  Widget _buildHostelWardenDetailCard(UserModel warden) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              warden.fullName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text('Role: ${warden.roleDisplayName}'),
-            const SizedBox(height: 4),
-            Text('Phone: ${warden.phone ?? 'Not provided'}'),
-            const SizedBox(height: 4),
-            Text('Email: ${warden.email}'),
-            if (warden.hostelName != null && warden.hostelName!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text('Hostel: ${warden.hostelName}'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHostelWardenDetailsPage(
-      String hostelName, List<UserModel> wardens) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(hostelName),
-        backgroundColor: AppConstants.primaryColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Warden details for $hostelName',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (wardens.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'No warden assigned to this hostel yet.',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: wardens.length,
-                  itemBuilder: (context, index) {
-                    return _buildHostelWardenDetailCard(wardens[index]);
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildOverviewTab(bool isMobile) {
     return RefreshIndicator(
@@ -1056,6 +991,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
           itemBuilder: (context, index) {
             final user = displayUsers[index];
             return ListTile(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserDetailsPage(user: user)),
+                );
+                if (result == true) _loadUsers();
+              },
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               leading: CircleAvatar(
@@ -1147,6 +1089,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           side: BorderSide(color: Colors.grey.shade200),
                         ),
                         child: ListTile(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserDetailsPage(user: user),
+                              ),
+                            );
+                            if (result == true) _loadUsers();
+                          },
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
                             backgroundColor: _getRoleColor(user.role),
@@ -1163,48 +1114,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(user.email),
-                          trailing: PopupMenuButton(
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.edit, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Edit'),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.delete,
-                                        size: 20, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Delete',
-                                        style: TextStyle(color: Colors.red)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onSelected: (value) async {
-                              if (value == 'edit') {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditUserScreen(user: user),
-                                  ),
-                                );
-                                if (result == true) {
-                                  _loadUsers();
-                                }
-                              } else if (value == 'delete') {
-                                _confirmDeleteUser(user);
-                              }
-                            },
-                          ),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                         ),
                       );
                     },
@@ -1229,53 +1139,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return AppConstants.errorColor;
       default:
         return Colors.grey;
-    }
-  }
-
-  Future<void> _confirmDeleteUser(UserModel user) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
-        content: Text('Are you sure you want to delete ${user.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await _adminService.deleteUser(user.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${user.fullName} deleted successfully'),
-              backgroundColor: AppConstants.successColor,
-            ),
-          );
-          _loadUsers();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting user: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
     }
   }
 }

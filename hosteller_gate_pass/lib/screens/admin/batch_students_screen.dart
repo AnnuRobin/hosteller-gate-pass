@@ -5,6 +5,7 @@ import '../../models/batch_model.dart';
 import '../../models/user_model.dart';
 import '../../utils/constants.dart';
 import 'edit_user_screen.dart';
+import 'user_details_page.dart';
 
 class BatchStudentsScreen extends StatefulWidget {
   final BatchModel batch;
@@ -75,7 +76,6 @@ class _BatchStudentsScreenState extends State<BatchStudentsScreen> {
       ),
       body: Column(
         children: [
-          // Students list
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -130,7 +130,15 @@ class _BatchStudentsScreenState extends State<BatchStudentsScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _showStudentDetails(student),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserDetailsPage(user: student),
+            ),
+          );
+          if (result == true) _loadStudents();
+        },
         child: ListTile(
           contentPadding: const EdgeInsets.all(16),
           leading: CircleAvatar(
@@ -160,159 +168,9 @@ class _BatchStudentsScreenState extends State<BatchStudentsScreen> {
               ],
             ],
           ),
-          trailing: PopupMenuButton(
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit, size: 20),
-                    SizedBox(width: 8),
-                    Text('Edit'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, size: 20, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) async {
-              switch (value) {
-                case 'edit':
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditUserScreen(user: student),
-                    ),
-                  );
-                  if (result == true) {
-                    _loadStudents();
-                  }
-                  break;
-                case 'delete':
-                  _confirmDeleteStudent(student);
-                  break;
-              }
-            },
-          ),
+          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         ),
       ),
     );
-  }
-
-  void _showStudentDetails(UserModel student) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(student.fullName),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Email', student.email),
-              if (student.phone != null)
-                _buildDetailRow('Phone', student.phone!),
-              _buildDetailRow('Department', widget.batch.departmentName),
-              _buildDetailRow('Semester', student.semester.toString()),
-              _buildDetailRow('Section', student.section ?? 'N/A'),
-              if (student.homeAddress != null)
-                _buildDetailRow('Home Address', student.homeAddress!),
-              _buildDetailRow(
-                'Email Verified',
-                student.emailVerified ? 'Yes' : 'No',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmDeleteStudent(UserModel student) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Student'),
-        content: Text('Are you sure you want to delete ${student.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await _adminService.deleteUser(student.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${student.fullName} deleted successfully'),
-              backgroundColor: AppConstants.successColor,
-            ),
-          );
-          _loadStudents();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting student: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
   }
 }

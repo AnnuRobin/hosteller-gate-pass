@@ -31,13 +31,18 @@ class _StudentGatePassHistoryScreenState
   bool _isLoading = true;
   String? _error;
   String _search = '';
+  final TextEditingController _searchCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -76,55 +81,76 @@ class _StudentGatePassHistoryScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppConstants.primaryColor,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Student Gate Pass History',
+              'Gate Pass History',
               style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16),
+                color: Color(0xFF1E3A8A),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
             Text(
               widget.scopeName,
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
             ),
           ],
         ),
       ),
       body: Column(
         children: [
-          // Search bar
+          // ── Search bar ──────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF334155)),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: const Border.fromBorderSide(
+                    BorderSide(color: Color(0x3394A3B8))),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search by student name...',
-                  hintStyle: TextStyle(color: Color(0xFF64748B)),
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF64748B)),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
+                controller: _searchCtrl,
+                style: const TextStyle(color: Color(0xFF1E293B)),
                 onChanged: (v) => setState(() => _search = v),
+                decoration: InputDecoration(
+                  hintText: 'Search by student name...',
+                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search,
+                      color: Color(0xFF94A3B8), size: 20),
+                  suffixIcon: _search.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear,
+                              color: Color(0xFF94A3B8), size: 18),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            setState(() => _search = '');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                ),
               ),
             ),
           ),
 
-          // Summary chip
+          // ── Summary chips ───────────────────────────────────────────
           if (!_isLoading && _error == null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -133,7 +159,7 @@ class _StudentGatePassHistoryScreenState
                   _summaryChip(
                     '${_grouped.length}',
                     'Students',
-                    const Color(0xFF3B82F6),
+                    AppConstants.primaryColor,
                     Icons.people_outline,
                   ),
                   const SizedBox(width: 10),
@@ -154,11 +180,12 @@ class _StudentGatePassHistoryScreenState
               ),
             ),
 
-          // List
+          // ── Content ─────────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF059669)))
+                ? Center(
+                    child: CircularProgressIndicator(
+                        color: AppConstants.primaryColor))
                 : _error != null
                     ? Center(
                         child: Column(
@@ -168,7 +195,7 @@ class _StudentGatePassHistoryScreenState
                                 color: Colors.red, size: 48),
                             const SizedBox(height: 12),
                             Text('Error: $_error',
-                                style: const TextStyle(color: Colors.white70)),
+                                style: const TextStyle(color: Color(0xFF64748B))),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: _loadData,
@@ -183,21 +210,22 @@ class _StudentGatePassHistoryScreenState
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.inbox,
-                                    size: 64, color: Colors.grey[700]),
+                                    size: 64, color: Colors.grey[300]),
                                 const SizedBox(height: 12),
                                 const Text(
                                   'No gate pass history found',
                                   style: TextStyle(
-                                      color: Colors.white70, fontSize: 16),
+                                      color: Color(0xFF64748B), fontSize: 16),
                                 ),
                               ],
                             ),
                           )
                         : RefreshIndicator(
                             onRefresh: _loadData,
-                            color: const Color(0xFF059669),
+                            color: AppConstants.primaryColor,
                             child: ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 4, 16, 24),
                               itemCount: _filteredEntries().length,
                               itemBuilder: (context, i) {
                                 final entry = _filteredEntries()[i];
@@ -218,9 +246,9 @@ class _StudentGatePassHistoryScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -239,8 +267,8 @@ class _StudentGatePassHistoryScreenState
                 ),
                 Text(
                   label,
-                  style:
-                      TextStyle(color: color.withOpacity(0.8), fontSize: 11),
+                  style: TextStyle(
+                      color: color.withValues(alpha: 0.8), fontSize: 11),
                 ),
               ],
             ),
@@ -258,9 +286,8 @@ class _StudentGatePassHistoryScreenState
         passes.isNotEmpty ? passes.first.className ?? '' : '';
     final total = passes.length;
     final approved = passes.where((p) => p.isFinallyApproved).length;
-    final pending = passes
-        .where((p) => !p.isFinallyApproved && p.status != 'rejected')
-        .length;
+    final pending =
+        passes.where((p) => !p.isFinallyApproved && p.status != 'rejected').length;
     final rejected = passes.where((p) => p.status == 'rejected').length;
     final expired = passes.where((p) => p.isEffectivelyExpired).length;
 
@@ -280,9 +307,17 @@ class _StudentGatePassHistoryScreenState
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF334155)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: const Border.fromBorderSide(
+              BorderSide(color: Color(0x1A000000))),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x07000000),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -291,18 +326,19 @@ class _StudentGatePassHistoryScreenState
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.15),
+                color: AppConstants.primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: const Color(0xFF059669).withOpacity(0.4), width: 1.5),
+                    color: AppConstants.primaryColor.withValues(alpha: 0.3),
+                    width: 1.5),
               ),
               child: Center(
                 child: Text(
                   studentName.isNotEmpty
                       ? studentName[0].toUpperCase()
                       : '?',
-                  style: const TextStyle(
-                    color: Color(0xFF34D399),
+                  style: TextStyle(
+                    color: AppConstants.primaryColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -317,7 +353,7 @@ class _StudentGatePassHistoryScreenState
                   Text(
                     studentName,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF1E293B),
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -326,10 +362,9 @@ class _StudentGatePassHistoryScreenState
                     Text(
                       className,
                       style: const TextStyle(
-                          color: Color(0xFF94A3B8), fontSize: 12),
+                          color: Color(0xFF64748B), fontSize: 12),
                     ),
                   const SizedBox(height: 8),
-                  // Stats row
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
@@ -347,7 +382,7 @@ class _StudentGatePassHistoryScreenState
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF64748B), size: 22),
+            const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 22),
           ],
         ),
       ),
@@ -358,9 +393,9 @@ class _StudentGatePassHistoryScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Text(
         label,
@@ -388,10 +423,10 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppConstants.primaryColor,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,13 +434,13 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
             Text(
               studentName,
               style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF1E3A8A),
                   fontWeight: FontWeight.bold,
                   fontSize: 15),
             ),
             Text(
               '${passes.length} gate pass${passes.length == 1 ? '' : 'es'} total',
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
             ),
           ],
         ),
@@ -413,12 +448,12 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: passes.length,
-        itemBuilder: (context, i) => _buildPassTile(context, passes[i]),
+        itemBuilder: (context, i) => _buildPassTile(passes[i]),
       ),
     );
   }
 
-  Widget _buildPassTile(BuildContext context, GatePassModel pass) {
+  Widget _buildPassTile(GatePassModel pass) {
     Color statusColor;
     String statusLabel;
     IconData statusIcon;
@@ -445,10 +480,17 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: statusColor.withOpacity(0.3), width: 1.2),
+            color: statusColor.withValues(alpha: 0.25), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x07000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,7 +502,7 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
                 child: Text(
                   pass.reason,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF1E293B),
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -473,9 +515,10 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withOpacity(0.5)),
+                  border:
+                      Border.all(color: statusColor.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -499,13 +542,13 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.location_on_outlined,
-                  color: Color(0xFF64748B), size: 14),
+                  color: Color(0xFF94A3B8), size: 14),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   pass.destination,
                   style: const TextStyle(
-                      color: Color(0xFF94A3B8), fontSize: 12),
+                      color: Color(0xFF64748B), fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -516,12 +559,12 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.calendar_today_outlined,
-                  color: Color(0xFF64748B), size: 14),
+                  color: Color(0xFF94A3B8), size: 14),
               const SizedBox(width: 4),
               Text(
                 '${DateFormat('dd MMM yyyy').format(pass.fromDate)} → ${DateFormat('dd MMM yyyy').format(pass.toDate)}',
                 style: const TextStyle(
-                    color: Color(0xFF94A3B8), fontSize: 12),
+                    color: Color(0xFF64748B), fontSize: 12),
               ),
             ],
           ),
@@ -529,12 +572,12 @@ class _StudentDetailHistoryScreen extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.access_time_outlined,
-                  color: Color(0xFF64748B), size: 14),
+                  color: Color(0xFF94A3B8), size: 14),
               const SizedBox(width: 4),
               Text(
                 'Applied ${DateFormat('dd MMM yyyy').format(pass.createdAt)}',
                 style: const TextStyle(
-                    color: Color(0xFF64748B), fontSize: 11),
+                    color: Color(0xFF94A3B8), fontSize: 11),
               ),
             ],
           ),

@@ -29,6 +29,7 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
   // Special sentinel value for 'Add New' options
   static const String _kAddNewDept = '__add_new_dept__';
   static const String _kAddNewAdvisor = '__add_new_advisor__';
+  static const String _kAddNewHod = '__add_new_hod__';
   String? _selectedAdvisorId;
   String? _selectedHodId;
   String? _selectedWardenId;
@@ -82,45 +83,54 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Bulk Create Class'),
+        backgroundColor: AppConstants.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Bulk Create Class',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadInitialData,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorState()
-              : Stepper(
-                  currentStep: _currentStep,
-                  onStepContinue: _onStepContinue,
-                  onStepCancel: _onStepCancel,
-                  controlsBuilder: _buildStepControls,
-                  steps: [
-                    Step(
-                      title: const Text('Class Setup'),
-                      content: _buildClassSetupStep(),
-                      isActive: _currentStep >= 0,
-                      state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-                    ),
-                    Step(
-                      title: const Text('Add Students'),
-                      content: _buildAddStudentsStep(),
-                      isActive: _currentStep >= 1,
-                      state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-                    ),
-                    Step(
-                      title: const Text('Review & Create'),
-                      content: _buildReviewStep(),
-                      isActive: _currentStep >= 2,
-                      state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-                    ),
-                  ],
-                ),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? _buildErrorState()
+                : Stepper(
+                    currentStep: _currentStep,
+                    onStepContinue: _onStepContinue,
+                    onStepCancel: _onStepCancel,
+                    controlsBuilder: _buildStepControls,
+                    steps: [
+                      Step(
+                        title: const Text('Class Setup'),
+                        content: _buildClassSetupStep(),
+                        isActive: _currentStep >= 0,
+                        state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+                      ),
+                      Step(
+                        title: const Text('Add Students'),
+                        content: _buildAddStudentsStep(),
+                        isActive: _currentStep >= 1,
+                        state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                      ),
+                      Step(
+                        title: const Text('Review & Create'),
+                        content: _buildReviewStep(),
+                        isActive: _currentStep >= 2,
+                        state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+                      ),
+                    ],
+                  ),
+      ),
     );
   }
 
@@ -142,167 +152,268 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
     );
   }
 
+  // ── Shared input decoration ───────────────────────────────────────────────
+  InputDecoration _fieldDecoration({
+    required String label,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 13, color: Colors.grey[600]),
+      prefixIcon: Icon(icon, size: 18, color: AppConstants.primaryColor),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: AppConstants.primaryColor, width: 1.8),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      isDense: true,
+    );
+  }
+
+  // ── Section card builder ──────────────────────────────────────────────────
+  Widget _buildSectionCard({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
+              border: Border(left: BorderSide(color: color, width: 3)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 15, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildClassSetupStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Department
-        DropdownButtonFormField<String>(
-          value: _selectedDepartmentId,
-          decoration: const InputDecoration(
-            labelText: 'Department *',
-            prefixIcon: Icon(Icons.business),
-            border: OutlineInputBorder(),
-          ),
-          items: [
-            ..._departments.map((dept) {
-              return DropdownMenuItem(
-                value: dept.id,
-                child: Text(dept.name),
-              );
-            }),
-            // Add New Department option
-            const DropdownMenuItem(
-              value: _kAddNewDept,
-              child: Row(
-                children: [
-                  Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Add New Department',
-                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+        // ── Class Setup card ──────────────────────────────────────────
+        _buildSectionCard(
+          icon: Icons.class_outlined,
+          title: 'CLASS SETUP',
+          color: AppConstants.primaryColor,
+          children: [
+            // Department
+            DropdownButtonFormField<String>(
+              value: _selectedDepartmentId,
+              isExpanded: true,
+              decoration: _fieldDecoration(
+                  label: 'Department *', icon: Icons.business_outlined),
+              items: [
+                ..._departments.map((dept) => DropdownMenuItem(
+                      value: dept.id,
+                      child:
+                          Text(dept.name, overflow: TextOverflow.ellipsis),
+                    )),
+                const DropdownMenuItem(
+                  value: _kAddNewDept,
+                  child: Text(
+                    '+ Add New Department',
+                    style: TextStyle(
+                        color: Colors.green, fontWeight: FontWeight.w600),
                   ),
-                ],
-              ),
+                ),
+              ],
+              onChanged: (value) async {
+                if (value == _kAddNewDept) {
+                  await _showAddDepartmentDialog();
+                } else {
+                  setState(() => _selectedDepartmentId = value);
+                }
+              },
+            ),
+            const SizedBox(height: 14),
+
+            // Semester + Section in a row
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    value: _selectedSemester,
+                    decoration: _fieldDecoration(
+                        label: 'Semester *', icon: Icons.layers_outlined),
+                    items: List.generate(
+                        8,
+                        (i) => DropdownMenuItem(
+                            value: i + 1,
+                            child: Text('Sem ${i + 1}'))),
+                    onChanged: (v) =>
+                        setState(() => _selectedSemester = v),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedSection,
+                    decoration: _fieldDecoration(
+                        label: 'Section *', icon: Icons.class_outlined),
+                    items: ['A', 'B', 'C', 'D', 'E']
+                        .map((s) => DropdownMenuItem(
+                            value: s, child: Text('Section $s')))
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _selectedSection = v!),
+                  ),
+                ),
+              ],
             ),
           ],
-          onChanged: (value) async {
-            if (value == _kAddNewDept) {
-              await _showAddDepartmentDialog();
-            } else {
-              setState(() => _selectedDepartmentId = value);
-            }
-          },
         ),
+
         const SizedBox(height: 16),
 
-        // Semester
-        DropdownButtonFormField<int>(
-          value: _selectedSemester,
-          decoration: const InputDecoration(
-            labelText: 'Semester *',
-            prefixIcon: Icon(Icons.calendar_today),
-            border: OutlineInputBorder(),
-          ),
-          items: List.generate(8, (index) {
-            return DropdownMenuItem(
-              value: index + 1,
-              child: Text('Semester ${index + 1}'),
-            );
-          }),
-          onChanged: (value) => setState(() => _selectedSemester = value),
-        ),
-        const SizedBox(height: 16),
-
-        // Section
-        DropdownButtonFormField<String>(
-          value: _selectedSection,
-          decoration: const InputDecoration(
-            labelText: 'Section *',
-            prefixIcon: Icon(Icons.class_),
-            border: OutlineInputBorder(),
-          ),
-          items: ['A', 'B', 'C', 'D', 'E'].map((section) {
-            return DropdownMenuItem(
-              value: section,
-              child: Text('Section $section'),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedSection = value!),
-        ),
-        const SizedBox(height: 24),
-
-        const Divider(),
-        const SizedBox(height: 16),
-        const Text(
-          'Assign Roles',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-
-        // Advisor
-        DropdownButtonFormField<String>(
-          value: _selectedAdvisorId,
-          decoration: const InputDecoration(
-            labelText: 'Advisor',
-            prefixIcon: Icon(Icons.person),
-            border: OutlineInputBorder(),
-          ),
-          items: [
-            ..._advisors.map((advisor) {
-              return DropdownMenuItem(
-                value: advisor.id,
-                child: Text(advisor.fullName),
-              );
-            }),
-            // Create New Advisor option
-            const DropdownMenuItem(
-              value: _kAddNewAdvisor,
-              child: Row(
-                children: [
-                  Icon(Icons.person_add_alt_1, color: Colors.blue, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Create New Advisor',
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+        // ── Assign Roles card ─────────────────────────────────────────
+        _buildSectionCard(
+          icon: Icons.people_outline_rounded,
+          title: 'ASSIGN ROLES',
+          color: const Color(0xFF8B5CF6),
+          children: [
+            // Advisor
+            DropdownButtonFormField<String>(
+              value: _selectedAdvisorId,
+              isExpanded: true,
+              decoration: _fieldDecoration(
+                  label: 'Advisor', icon: Icons.person_pin_outlined),
+              items: [
+                ..._advisors.map((a) {
+                  final dept = _departments.firstWhere(
+                    (d) => d.id == a.departmentId,
+                    orElse: () => DepartmentModel(id: '', name: '', createdAt: DateTime.now()),
+                  );
+                  final deptCode = dept.departmentCode ?? 'NA';
+                  return DropdownMenuItem(
+                    value: a.id,
+                    child: Text('${a.fullName} ($deptCode)',
+                        overflow: TextOverflow.ellipsis),
+                  );
+                }),
+                const DropdownMenuItem(
+                  value: _kAddNewAdvisor,
+                  child: Text(
+                    '+ Create New Advisor',
+                    style: TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.w600),
                   ),
-                ],
-              ),
+                ),
+              ],
+              onChanged: (value) async {
+                if (value == _kAddNewAdvisor) {
+                  await _showCreateAdvisorDialog();
+                } else {
+                  setState(() => _selectedAdvisorId = value);
+                }
+              },
+            ),
+            const SizedBox(height: 14),
+
+            // HOD
+            DropdownButtonFormField<String>(
+              value: _selectedHodId,
+              isExpanded: true,
+              decoration: _fieldDecoration(
+                  label: 'HOD', icon: Icons.account_balance_outlined),
+              items: [
+                ..._hods.map((h) {
+                  final dept = _departments.firstWhere(
+                    (d) => d.id == h.departmentId,
+                    orElse: () => DepartmentModel(id: '', name: '', createdAt: DateTime.now()),
+                  );
+                  final deptCode = dept.departmentCode ?? 'NA';
+                  return DropdownMenuItem(
+                    value: h.id,
+                    child: Text('${h.fullName} ($deptCode)',
+                        overflow: TextOverflow.ellipsis),
+                  );
+                }),
+                const DropdownMenuItem(
+                  value: _kAddNewHod,
+                  child: Text(
+                    '+ Create New HOD',
+                    style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+              onChanged: (value) async {
+                if (value == _kAddNewHod) {
+                  await _showCreateHodDialog();
+                } else {
+                  setState(() => _selectedHodId = value);
+                }
+              },
+            ),
+            const SizedBox(height: 14),
+
+            // Warden
+            DropdownButtonFormField<String>(
+              value: _selectedWardenId,
+              isExpanded: true,
+              decoration: _fieldDecoration(
+                  label: 'Warden', icon: Icons.security_outlined),
+              items: _wardens
+                  .map((w) => DropdownMenuItem(
+                        value: w.id,
+                        child: Text(w.fullName,
+                            overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (v) =>
+                  setState(() => _selectedWardenId = v),
             ),
           ],
-          onChanged: (value) async {
-            if (value == _kAddNewAdvisor) {
-              await _showCreateAdvisorDialog();
-            } else {
-              setState(() => _selectedAdvisorId = value);
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-
-        // HOD
-        DropdownButtonFormField<String>(
-          value: _selectedHodId,
-          decoration: const InputDecoration(
-            labelText: 'HOD',
-            prefixIcon: Icon(Icons.person_outline),
-            border: OutlineInputBorder(),
-          ),
-          items: _hods.map((hod) {
-            return DropdownMenuItem(
-              value: hod.id,
-              child: Text(hod.fullName),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedHodId = value),
-        ),
-        const SizedBox(height: 16),
-
-        // Warden
-        DropdownButtonFormField<String>(
-          value: _selectedWardenId,
-          decoration: const InputDecoration(
-            labelText: 'Warden',
-            prefixIcon: Icon(Icons.security),
-            border: OutlineInputBorder(),
-          ),
-          items: _wardens.map((warden) {
-            return DropdownMenuItem(
-              value: warden.id,
-              child: Text(warden.fullName),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedWardenId = value),
         ),
       ],
     );
@@ -663,15 +774,32 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
           if (_currentStep > 0)
             OutlinedButton(
               onPressed: details.onStepCancel,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
               child: const Text('Back'),
             ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: details.onStepContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.primaryColor,
+          if (_currentStep > 0) const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: details.onStepContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                elevation: 2,
+              ),
+              child: Text(
+                _currentStep == 2 ? 'Create Class' : 'Continue',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 15),
+              ),
             ),
-            child: Text(_currentStep == 2 ? 'Create Class' : 'Continue'),
           ),
         ],
       ),
@@ -723,7 +851,7 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
   /// Shows a dialog to add a new department inline.
   Future<void> _showAddDepartmentDialog() async {
     final nameController = TextEditingController();
-    final descController = TextEditingController();
+    final codeController = TextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -747,13 +875,22 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: descController,
+              controller: codeController,
+              textCapitalization: TextCapitalization.characters,
               decoration: const InputDecoration(
-                labelText: 'Description (optional)',
+                labelText: 'Department Code *',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
+                prefixIcon: Icon(Icons.code),
               ),
-              maxLines: 2,
+              onChanged: (v) {
+                final upper = v.toUpperCase();
+                if (v != upper) {
+                  codeController.value = codeController.value.copyWith(
+                    text: upper,
+                    selection: TextSelection.collapsed(offset: upper.length),
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -762,9 +899,9 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () async {
-              if (nameController.text.trim().isEmpty) {
+              if (nameController.text.trim().isEmpty || codeController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Department name is required'), backgroundColor: Colors.red),
+                  const SnackBar(content: Text('Name and Code are required'), backgroundColor: Colors.red),
                 );
                 return;
               }
@@ -781,7 +918,7 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
         setState(() => _isLoading = true);
         await _departmentService.createDepartment(
           name: nameController.text.trim(),
-          description: descController.text.trim().isEmpty ? null : descController.text.trim(),
+          departmentCode: codeController.text.trim().toUpperCase(),
         );
         // Reload departments
         final departments = await _departmentService.getAllDepartments();
@@ -804,7 +941,144 @@ class _BulkCreateClassScreenState extends State<BulkCreateClassScreen> {
       }
     }
     nameController.dispose();
-    descController.dispose();
+    codeController.dispose();
+  }
+
+  /// Shows a dialog to create a new HOD user inline.
+  Future<void> _showCreateHodDialog() async {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.account_balance, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Create New HOD'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Full Name *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone (optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Default password: SmartPass@123',
+                      style: TextStyle(fontSize: 12, color: Colors.amber),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style:
+                ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            onPressed: () {
+              if (nameController.text.trim().isEmpty ||
+                  emailController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                      content: Text('Name and email are required'),
+                      backgroundColor: Colors.red),
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Create',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        setState(() => _isLoading = true);
+        await _adminService.createUser(
+          email: emailController.text.trim(),
+          password: 'SmartPass@123',
+          fullName: nameController.text.trim(),
+          role: 'hod',
+          phone: phoneController.text.trim().isEmpty
+              ? null
+              : phoneController.text.trim(),
+          departmentId: _selectedDepartmentId,
+        );
+        final allUsers = await _adminService.getAllUsers();
+        final newHod = allUsers.firstWhere(
+          (u) => u.email == emailController.text.trim(),
+          orElse: () =>
+              allUsers.where((u) => u.role == 'hod').last,
+        );
+        setState(() {
+          _hods = allUsers.where((u) => u.role == 'hod').toList();
+          _selectedHodId = newHod.id;
+          _isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'HOD "${nameController.text.trim()}" created and selected!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        _showError('Failed to create HOD: $e');
+      }
+    }
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
   }
 
   /// Shows a dialog to create a new Advisor user inline.

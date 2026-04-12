@@ -184,11 +184,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             const BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       padding: EdgeInsets.fromLTRB(
-          20, MediaQuery.of(context).padding.top + 20, 10, 32),
+          24, MediaQuery.of(context).padding.top + 24, 14, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: date | notifications + menu ──────────────────────
+          // ── Top row: date | menu ──────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,43 +202,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       fontSize: 14),
                 ),
               ),
-              Row(
-                children: [
-                  const Icon(Icons.notifications_none,
-                      color: Colors.white, size: 26),
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (ctx) => IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    ),
-                  ),
-                ],
+              Builder(
+                builder: (ctx) => IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           // ── Greeting ──────────────────────────────────────────────────
           Text(
             '${_getGreeting()},',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 36,
+              fontSize: 34,
               fontWeight: FontWeight.w400,
               letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             fullName,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           // ── Stat row ──────────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -325,13 +318,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final title =
         _selectedIndex < titles.length ? titles[_selectedIndex] : '';
     return Container(
-      color: Colors.white,
+      color: AppConstants.primaryColor,
       padding: EdgeInsets.fromLTRB(
-          8, MediaQuery.of(context).padding.top + 8, 16, 8),
+          4, MediaQuery.of(context).padding.top + 4, 16, 8),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => setState(() => _selectedIndex = 0),
           ),
           Text(
@@ -339,7 +332,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
         ],
@@ -512,7 +505,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       case 0:
         return _buildOverviewTab(isMobile);
       case 1:
-        return const DepartmentsScreen();
+        return const DepartmentsScreen(embedded: true);
       case 2:
         return _buildHostelsTab();
       case 3:
@@ -760,39 +753,58 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
+            // Two square cards: Audit Logs | Bulk Create Class
+            Row(
               children: [
-                _buildActionChip('Add New User', Icons.person_add, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateUserScreen(),
-                    ),
-                  ).then((result) {
-                    if (result == true) _loadUsers();
-                  });
-                }),
-                _buildActionChip('Bulk Create Class', Icons.group_add,
-                    () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BulkCreateClassScreen(),
-                    ),
-                  );
-                  if (result == true) _loadUsers();
-                }),
-                _buildActionChip('Audit Logs', Icons.history, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AuditLogsScreen()),
-                  );
-                }),
+                Expanded(
+                  child: _buildQuickActionCard(
+                    label: 'Audit Logs',
+                    subLabel: 'View system logs',
+                    icon: Icons.history,
+                    iconBg: const Color(0xFFEEF2FF),
+                    iconColor: AppConstants.primaryColor,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AuditLogsScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildQuickActionCard(
+                    label: 'Bulk Create Class',
+                    subLabel: 'Create classes at once',
+                    icon: Icons.group_add,
+                    iconBg: const Color(0xFFECFDF5),
+                    iconColor: AppConstants.successColor,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BulkCreateClassScreen(),
+                        ),
+                      );
+                      if (result == true) _loadUsers();
+                    },
+                  ),
+                ),
               ],
             ),
+            const SizedBox(height: 12),
+            // Wide banner: Add New User
+            _buildAddUserBanner(() {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateUserScreen(),
+                ),
+              ).then((result) {
+                if (result == true) _loadUsers();
+              });
+            }),
             const SizedBox(height: 32),
           ],
 
@@ -873,28 +885,122 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildActionChip(String label, IconData icon, VoidCallback onTap) {
+  /// Square card-style quick action (like Morning / Night scene reference)
+  Widget _buildQuickActionCard({
+    required String label,
+    required String subLabel,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: AppConstants.primaryColor),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(height: 16),
             Text(
               label,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subLabel,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Wide banner-style quick action (like "You created 8 scenes" reference)
+  Widget _buildAddUserBanner(VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.person_add,
+                  color: Color(0xFFF59E0B), size: 22),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add New User',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Register a student, warden or staff',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
             ),
           ],
         ),

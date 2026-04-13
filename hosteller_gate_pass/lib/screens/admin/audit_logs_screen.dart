@@ -62,66 +62,58 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Audit Logs'),
+        backgroundColor: AppConstants.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Audit Logs',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadAuditLogs,
           ),
         ],
       ),
       body: Column(
         children: [
-          // Header with stats
+          // Filter bar
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppConstants.primaryColor,
-                  AppConstants.secondaryColor,
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Admin Activity Log',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${_filteredLogs.length} ${_filteredLogs.length == 1 ? 'entry' : 'entries'}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Filter
-          Container(
-            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: DropdownButtonFormField<String>(
               value: _filterAction ?? 'All Actions',
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Filter by Action',
-                prefixIcon: Icon(Icons.filter_list),
-                border: OutlineInputBorder(),
+                labelStyle:
+                    TextStyle(fontSize: 13, color: Colors.grey[600]),
+                prefixIcon: Icon(Icons.filter_list,
+                    size: 18, color: AppConstants.primaryColor),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                      color: AppConstants.primaryColor, width: 1.6),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                isDense: true,
               ),
               items: _actionTypes
                   .map((action) => DropdownMenuItem(
                         value: action,
-                        child: Text(_formatActionName(action)),
+                        child: Text(_formatActionName(action),
+                            style: const TextStyle(fontSize: 14)),
                       ))
                   .toList(),
               onChanged: (value) {
@@ -129,6 +121,21 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                   _filterAction = value == 'All Actions' ? null : value;
                 });
               },
+            ),
+          ),
+          // Entry count info strip
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppConstants.primaryColor.withValues(alpha: 0.06),
+            child: Text(
+              '${_filteredLogs.length} ${_filteredLogs.length == 1 ? 'entry' : 'entries'} found',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppConstants.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
 

@@ -68,43 +68,47 @@ class _EditUserScreenState extends State<EditUserScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit User'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.lock_reset),
-            tooltip: 'Reset Password',
-            onPressed: _showResetPasswordDialog,
-          ),
-        ],
+        backgroundColor: AppConstants.primaryColor,
+        foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    Card(
-                      color: AppConstants.primaryColor.withOpacity(0.1),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // --- Professional Header Card ---
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               backgroundColor: AppConstants.primaryColor,
-                              radius: 24,
+                              radius: 28,
                               child: Text(
                                 widget.user.fullName[0].toUpperCase(),
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 20),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,8 +116,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
                                   Text(
                                     widget.user.fullName,
                                     style: const TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -122,6 +127,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
@@ -130,168 +136,207 @@ class _EditUserScreenState extends State<EditUserScreen> {
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Basic Information
-                    _buildSectionHeader('Basic Information'),
-                    const SizedBox(height: 16),
-
-                    // Email (disabled)
-                    TextFormField(
-                      initialValue: widget.user.email,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
-                        enabled: false,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Full Name
-                    TextFormField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name *',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Full name is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Phone
-                    TextFormField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone',
-                        prefixIcon: Icon(Icons.phone),
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Role Selection
-                    _buildSectionHeader('Role & Permissions'),
-                    const SizedBox(height: 16),
-
-                    DropdownButtonFormField<String>(
-                      value: _selectedRole,
-                      decoration: const InputDecoration(
-                        labelText: 'Role *',
-                        prefixIcon: Icon(Icons.badge),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'student', child: Text('Student')),
-                        DropdownMenuItem(value: 'advisor', child: Text('Advisor')),
-                        DropdownMenuItem(value: 'hod', child: Text('HOD')),
-                        DropdownMenuItem(value: 'warden', child: Text('Warden')),
-                        DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                        DropdownMenuItem(value: 'parent', child: Text('Parent')),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _selectedRole = value!);
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Role-specific fields
-                    if (_selectedRole == 'student') ..._buildStudentFields(),
-                    if (_selectedRole == 'advisor' ||
-                        _selectedRole == 'hod' ||
-                        _selectedRole == 'warden')
-                      ..._buildStaffFields(),
-
-                    const SizedBox(height: 32),
-
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                      // --- Form Fields Card ---
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
-                            child: const Text('Cancel'),
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: _updateUser,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppConstants.primaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Column(
+                          children: [
+                            // Email (disabled)
+                            _buildTextField(
+                              initialValue: widget.user.email,
+                              label: 'Email Address',
+                              icon: Icons.email_outlined,
+                              enabled: false,
                             ),
-                            child: const Text(
-                              'Update User',
-                              style: TextStyle(fontSize: 16),
+                            const SizedBox(height: 16),
+
+                            // Full Name
+                            _buildTextField(
+                              controller: _fullNameController,
+                              label: 'Full Name',
+                              icon: Icons.person_outline,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Full name is required';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Phone
+                            _buildTextField(
+                              controller: _phoneController,
+                              label: 'Phone Number',
+                              icon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Role Selection
+                            _buildDropdown<String>(
+                              value: _selectedRole,
+                              label: 'Role',
+                              icon: Icons.badge_outlined,
+                              items: const [
+                                DropdownMenuItem(value: 'student', child: Text('Student')),
+                                DropdownMenuItem(value: 'advisor', child: Text('Advisor')),
+                                DropdownMenuItem(value: 'hod', child: Text('HOD')),
+                                DropdownMenuItem(value: 'warden', child: Text('Warden')),
+                                DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                                DropdownMenuItem(value: 'parent', child: Text('Parent')),
+                              ],
+                              onChanged: (value) => setState(() => _selectedRole = value!),
+                            ),
+                            
+                            // Role-specific fields
+                            if (_selectedRole == 'student') ..._buildStudentFields(),
+                            if (_selectedRole == 'advisor' ||
+                                _selectedRole == 'hod' ||
+                                _selectedRole == 'warden')
+                              ..._buildStaffFields(),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // --- Action Buttons ---
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side: BorderSide(color: Colors.grey.shade300),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: _updateUser,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppConstants.primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text(
+                                'Update User',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
+  Widget _buildTextField({
+    TextEditingController? controller,
+    String? initialValue,
+    required String label,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        initialValue: initialValue,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        validator: validator,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 22),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppConstants.primaryColor, width: 1.5)),
+          filled: !enabled,
+          fillColor: enabled ? null : Colors.grey[50],
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required T value,
+    required String label,
+    required IconData icon,
+    required List<DropdownMenuItem<T>> items,
+    required void Function(T?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        isExpanded: true, // Fix for overflow issues with long text
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 22),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppConstants.primaryColor, width: 1.5)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
       ),
     );
   }
 
   List<Widget> _buildStudentFields() {
     return [
-      _buildSectionHeader('Student Information'),
       const SizedBox(height: 16),
-
       // Department
-      DropdownButtonFormField<String>(
-        value: _selectedDepartmentId,
-        decoration: const InputDecoration(
-          labelText: 'Department *',
-          prefixIcon: Icon(Icons.business),
-          border: OutlineInputBorder(),
-        ),
+      _buildDropdown<String>(
+        value: _selectedDepartmentId!,
+        label: 'Department',
+        icon: Icons.business_outlined,
         items: _departments
             .map((dept) => DropdownMenuItem(
                   value: dept.id,
                   child: Text(dept.name),
                 ))
             .toList(),
-        onChanged: (value) {
-          setState(() => _selectedDepartmentId = value);
-        },
+        onChanged: (value) => setState(() => _selectedDepartmentId = value),
       ),
-      const SizedBox(height: 16),
 
       // Semester
-      DropdownButtonFormField<int>(
-        value: _selectedSemester,
-        decoration: const InputDecoration(
-          labelText: 'Semester *',
-          prefixIcon: Icon(Icons.calendar_today),
-          border: OutlineInputBorder(),
-        ),
+      _buildDropdown<int>(
+        value: _selectedSemester!,
+        label: 'Semester',
+        icon: Icons.calendar_today_outlined,
         items: List.generate(
           8,
           (index) => DropdownMenuItem(
@@ -299,110 +344,72 @@ class _EditUserScreenState extends State<EditUserScreen> {
             child: Text('Semester ${index + 1}'),
           ),
         ),
-        onChanged: (value) {
-          setState(() => _selectedSemester = value);
-        },
+        onChanged: (value) => setState(() => _selectedSemester = value),
       ),
-      const SizedBox(height: 16),
 
       // Section
-      DropdownButtonFormField<String>(
-        value: _selectedSection,
-        decoration: const InputDecoration(
-          labelText: 'Section *',
-          prefixIcon: Icon(Icons.class_),
-          border: OutlineInputBorder(),
-        ),
+      _buildDropdown<String>(
+        value: _selectedSection!,
+        label: 'Section',
+        icon: Icons.class_outlined,
         items: ['A', 'B', 'C', 'D', 'E']
             .map((section) => DropdownMenuItem(
                   value: section,
                   child: Text('Section $section'),
                 ))
             .toList(),
-        onChanged: (value) {
-          setState(() => _selectedSection = value);
-        },
+        onChanged: (value) => setState(() => _selectedSection = value),
       ),
-      const SizedBox(height: 16),
 
       // Home Address
-      TextFormField(
+      _buildTextField(
         controller: _homeAddressController,
-        decoration: const InputDecoration(
-          labelText: 'Home Address',
-          prefixIcon: Icon(Icons.home),
-          border: OutlineInputBorder(),
-        ),
-        maxLines: 3,
+        label: 'Home Address',
+        icon: Icons.home_outlined,
+        maxLines: 2,
       ),
-      const SizedBox(height: 16),
 
       // Hostel Name
-      TextFormField(
+      _buildTextField(
         controller: _hostelNameController,
-        decoration: const InputDecoration(
-          labelText: 'Hostel Name',
-          hintText: 'e.g. Hostel A',
-          prefixIcon: Icon(Icons.domain),
-          border: OutlineInputBorder(),
-        ),
+        label: 'Hostel Name',
+        icon: Icons.domain_outlined,
       ),
-      const SizedBox(height: 16),
 
       // Room No
-      TextFormField(
+      _buildTextField(
         controller: _roomNoController,
-        decoration: const InputDecoration(
-          labelText: 'Room Number',
-          hintText: 'e.g. 101',
-          prefixIcon: Icon(Icons.meeting_room),
-          border: OutlineInputBorder(),
-        ),
+        label: 'Room Number',
+        icon: Icons.meeting_room_outlined,
       ),
-      const SizedBox(height: 24),
     ];
   }
 
   List<Widget> _buildStaffFields() {
     return [
-      _buildSectionHeader('Staff Information'),
       const SizedBox(height: 16),
-
-      // Department
-      DropdownButtonFormField<String>(
-        value: _selectedDepartmentId,
-        decoration: const InputDecoration(
-          labelText: 'Department',
-          prefixIcon: Icon(Icons.business),
-          border: OutlineInputBorder(),
+      // Department - Hidden for Wardens
+      if (_selectedRole != 'warden')
+        _buildDropdown<String?>(
+          value: _selectedDepartmentId,
+          label: 'Department',
+          icon: Icons.business_outlined,
+          items: _departments
+              .map((dept) => DropdownMenuItem(
+                    value: dept.id,
+                    child: Text(dept.name),
+                  ))
+              .toList(),
+          onChanged: (value) => setState(() => _selectedDepartmentId = value),
         ),
-        items: _departments
-            .map((dept) => DropdownMenuItem(
-                  value: dept.id,
-                  child: Text(dept.name),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() => _selectedDepartmentId = value);
-        },
-      ),
-      const SizedBox(height: 16),
 
       // Hostel Name (for wardens)
-      if (_selectedRole == 'warden') ...([
-        TextFormField(
+      if (_selectedRole == 'warden')
+        _buildTextField(
           controller: _hostelNameController,
-          decoration: const InputDecoration(
-            labelText: 'Hostel Name',
-            hintText: 'e.g. Hostel A',
-            prefixIcon: Icon(Icons.domain),
-            border: OutlineInputBorder(),
-          ),
+          label: 'Hostel Name',
+          icon: Icons.domain_outlined,
         ),
-        const SizedBox(height: 16),
-      ]),
-
-      const SizedBox(height: 8),
     ];
   }
 
@@ -457,81 +464,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
     }
   }
 
-  Future<void> _showResetPasswordDialog() async {
-    final passwordController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Reset password for ${widget.user.fullName}?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: passwordController,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                hintText: 'Minimum 8 characters',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (passwordController.text.length >= 8) {
-                Navigator.pop(context, true);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password must be at least 8 characters'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.warningColor,
-            ),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && passwordController.text.isNotEmpty) {
-      try {
-        await _adminService.resetUserPassword(
-          widget.user.id,
-          passwordController.text,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password reset successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error resetting password: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
 
   @override
   void dispose() {

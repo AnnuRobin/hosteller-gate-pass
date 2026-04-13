@@ -11,6 +11,9 @@ import 'edit_user_screen.dart';
 import 'audit_logs_screen.dart';
 import 'bulk_create_class_screen.dart';
 import 'create_user_screen.dart';
+import 'advisors_list_page.dart';
+import 'hods_list_page.dart';
+import 'user_details_page.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -184,11 +187,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             const BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       padding: EdgeInsets.fromLTRB(
-          20, MediaQuery.of(context).padding.top + 20, 10, 32),
+          24, MediaQuery.of(context).padding.top + 24, 14, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: date | notifications + menu ──────────────────────
+          // ── Top row: date | menu ──────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,43 +205,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       fontSize: 14),
                 ),
               ),
-              Row(
-                children: [
-                  const Icon(Icons.notifications_none,
-                      color: Colors.white, size: 26),
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (ctx) => IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    ),
-                  ),
-                ],
+              Builder(
+                builder: (ctx) => IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           // ── Greeting ──────────────────────────────────────────────────
           Text(
             '${_getGreeting()},',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 36,
+              fontSize: 34,
               fontWeight: FontWeight.w400,
               letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             fullName,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           // ── Stat row ──────────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -269,7 +265,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _buildStatItem(
                 'HODs',
                 hodCount.toString(),
-                () => setState(() => _searchQuery = 'hod'),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HodsListPage()),
+                ).then((_) => _loadUsers()),
               ),
               Container(
                   height: 40,
@@ -278,7 +277,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _buildStatItem(
                 'Advisors',
                 advisorCount.toString(),
-                () => setState(() => _searchQuery = 'advisor'),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdvisorsListPage()),
+                ).then((_) => _loadUsers()),
               ),
             ],
           ),
@@ -325,13 +327,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final title =
         _selectedIndex < titles.length ? titles[_selectedIndex] : '';
     return Container(
-      color: Colors.white,
+      color: AppConstants.primaryColor,
       padding: EdgeInsets.fromLTRB(
-          8, MediaQuery.of(context).padding.top + 8, 16, 8),
+          4, MediaQuery.of(context).padding.top + 4, 16, 8),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => setState(() => _selectedIndex = 0),
           ),
           Text(
@@ -339,7 +341,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
         ],
@@ -512,7 +514,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       case 0:
         return _buildOverviewTab(isMobile);
       case 1:
-        return const DepartmentsScreen();
+        return const DepartmentsScreen(embedded: true);
       case 2:
         return _buildHostelsTab();
       case 3:
@@ -570,16 +572,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   u.hostelName!.toLowerCase().trim() ==
                                       hostelName.toLowerCase().trim())
                               .toList();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  _buildHostelWardenDetailsPage(
-                                hostelName,
-                                hostelWardens,
+
+                          if (hostelWardens.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserDetailsPage(user: hostelWardens.first),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('No warden assigned to $hostelName'),
+                                backgroundColor: AppConstants.warningColor,
+                              ),
+                            );
+                          }
                         },
                         contentPadding: const EdgeInsets.all(16),
                         leading: Container(
@@ -611,86 +619,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return const CommonSettingsScreen();
   }
 
-  Widget _buildHostelWardenDetailCard(UserModel warden) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              warden.fullName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text('Role: ${warden.roleDisplayName}'),
-            const SizedBox(height: 4),
-            Text('Phone: ${warden.phone ?? 'Not provided'}'),
-            const SizedBox(height: 4),
-            Text('Email: ${warden.email}'),
-            if (warden.hostelName != null && warden.hostelName!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text('Hostel: ${warden.hostelName}'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHostelWardenDetailsPage(
-      String hostelName, List<UserModel> wardens) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(hostelName),
-        backgroundColor: AppConstants.primaryColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Warden details for $hostelName',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (wardens.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'No warden assigned to this hostel yet.',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: wardens.length,
-                  itemBuilder: (context, index) {
-                    return _buildHostelWardenDetailCard(wardens[index]);
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildOverviewTab(bool isMobile) {
     return RefreshIndicator(
@@ -760,39 +688,58 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
+            // Two square cards: Audit Logs | Bulk Create Class
+            Row(
               children: [
-                _buildActionChip('Add New User', Icons.person_add, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateUserScreen(),
-                    ),
-                  ).then((result) {
-                    if (result == true) _loadUsers();
-                  });
-                }),
-                _buildActionChip('Bulk Create Class', Icons.group_add,
-                    () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BulkCreateClassScreen(),
-                    ),
-                  );
-                  if (result == true) _loadUsers();
-                }),
-                _buildActionChip('Audit Logs', Icons.history, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AuditLogsScreen()),
-                  );
-                }),
+                Expanded(
+                  child: _buildQuickActionCard(
+                    label: 'Audit Logs',
+                    subLabel: 'View system logs',
+                    icon: Icons.history,
+                    iconBg: const Color(0xFFEEF2FF),
+                    iconColor: AppConstants.primaryColor,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AuditLogsScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildQuickActionCard(
+                    label: 'Bulk Create Class',
+                    subLabel: 'Create classes at once',
+                    icon: Icons.group_add,
+                    iconBg: const Color(0xFFECFDF5),
+                    iconColor: AppConstants.successColor,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BulkCreateClassScreen(),
+                        ),
+                      );
+                      if (result == true) _loadUsers();
+                    },
+                  ),
+                ),
               ],
             ),
+            const SizedBox(height: 12),
+            // Wide banner: Add New User
+            _buildAddUserBanner(() {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateUserScreen(),
+                ),
+              ).then((result) {
+                if (result == true) _loadUsers();
+              });
+            }),
             const SizedBox(height: 32),
           ],
 
@@ -873,28 +820,122 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildActionChip(String label, IconData icon, VoidCallback onTap) {
+  /// Square card-style quick action (like Morning / Night scene reference)
+  Widget _buildQuickActionCard({
+    required String label,
+    required String subLabel,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: AppConstants.primaryColor),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(height: 16),
             Text(
               label,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subLabel,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Wide banner-style quick action (like "You created 8 scenes" reference)
+  Widget _buildAddUserBanner(VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.person_add,
+                  color: Color(0xFFF59E0B), size: 22),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add New User',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Register a student, warden or staff',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
             ),
           ],
         ),
@@ -950,6 +991,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
           itemBuilder: (context, index) {
             final user = displayUsers[index];
             return ListTile(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserDetailsPage(user: user)),
+                );
+                if (result == true) _loadUsers();
+              },
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               leading: CircleAvatar(
@@ -1041,6 +1089,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           side: BorderSide(color: Colors.grey.shade200),
                         ),
                         child: ListTile(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserDetailsPage(user: user),
+                              ),
+                            );
+                            if (result == true) _loadUsers();
+                          },
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
                             backgroundColor: _getRoleColor(user.role),
@@ -1057,48 +1114,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(user.email),
-                          trailing: PopupMenuButton(
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.edit, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Edit'),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.delete,
-                                        size: 20, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Delete',
-                                        style: TextStyle(color: Colors.red)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onSelected: (value) async {
-                              if (value == 'edit') {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditUserScreen(user: user),
-                                  ),
-                                );
-                                if (result == true) {
-                                  _loadUsers();
-                                }
-                              } else if (value == 'delete') {
-                                _confirmDeleteUser(user);
-                              }
-                            },
-                          ),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                         ),
                       );
                     },
@@ -1123,53 +1139,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return AppConstants.errorColor;
       default:
         return Colors.grey;
-    }
-  }
-
-  Future<void> _confirmDeleteUser(UserModel user) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
-        content: Text('Are you sure you want to delete ${user.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await _adminService.deleteUser(user.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${user.fullName} deleted successfully'),
-              backgroundColor: AppConstants.successColor,
-            ),
-          );
-          _loadUsers();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting user: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
     }
   }
 }

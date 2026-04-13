@@ -54,52 +54,23 @@ class _BatchesScreenState extends State<BatchesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('${widget.department.name} - Batches'),
+        backgroundColor: AppConstants.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text('${widget.department.name} - Batches',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadBatches,
           ),
         ],
       ),
       body: Column(
         children: [
-          // Header with department info
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppConstants.primaryColor,
-                  AppConstants.secondaryColor,
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.department.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${_batches.length} ${_batches.length == 1 ? 'batch' : 'batches'}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Batches list
           Expanded(
             child: _isLoading

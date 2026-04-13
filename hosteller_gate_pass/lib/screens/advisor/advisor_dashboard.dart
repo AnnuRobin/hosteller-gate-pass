@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../models/gate_pass_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/gate_pass_provider.dart';
 import '../../utils/constants.dart';
@@ -113,8 +114,10 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     final gp = Provider.of<GatePassProvider>(context);
 
     final pendingRequests =
-        gp.requests.where((r) => r.advisorStatus == 'pending').toList();
+        gp.requests.where((r) => r.advisorStatus == 'pending' && !_isExpired(r)).toList();
     final activeRequests =
+        gp.requests.where((r) => r.isCurrentlyActive).toList();
+    final approvedRequests =
         gp.requests.where((r) => r.advisorStatus == 'approved').toList();
     final rejectedRequests =
         gp.requests.where((r) => r.advisorStatus == 'rejected').toList();
@@ -136,7 +139,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
-          onCardTap: _showPassDetail,
+          onCardTap: (ctx, r) => _showPassDetail(ctx, r),
           actionButtonsBuilder: (ctx, r, showDetail) {
             if (r.advisorStatus == 'pending' && !_isExpired(r)) {
               return Row(
@@ -164,6 +167,21 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
         break;
       case 2:
         body = DashboardListPage(
+          title: 'Approved Requests',
+          requests: approvedRequests,
+          icon: Icons.verified_user_outlined,
+          isLoading: gp.isLoading,
+          onRefresh: _loadData,
+          isExpiredFn: _isExpired,
+          statusColorFn: _statusColor,
+          statusLabelFn: _statusLabel,
+          cardBgFn: _cardBg,
+          cardBorderFn: _cardBorder,
+          onCardTap: (ctx, r) => _showPassDetail(ctx, r),
+        );
+        break;
+      case 3:
+        body = DashboardListPage(
           title: 'Active Requests',
           requests: activeRequests,
           icon: Icons.verified_outlined,
@@ -174,10 +192,10 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
-          onCardTap: _showPassDetail,
+          onCardTap: (ctx, r) => _showPassDetail(ctx, r),
         );
         break;
-      case 3:
+      case 4:
         body = DashboardListPage(
           title: 'Rejected Requests',
           requests: rejectedRequests,
@@ -189,27 +207,28 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
-          onCardTap: _showPassDetail,
+          onCardTap: (ctx, r) => _showPassDetail(ctx, r),
         );
         break;
-      case 4:
+      case 5:
         body = const ManageStudentsScreen();
         break;
-      case 5:
+      case 6:
         body = AddStudentScreen(
           onStudentCreated: () => setState(() => _selectedIndex = 0),
         );
         break;
-      case 6:
+      case 7:
         body = const BulkUploadStudentsScreen();
         break;
-      case 7:
+      case 8:
         body = const CommonSettingsScreen();
         break;
       default:
         body = _buildHomePage(
           pendingCount: pendingRequests.length,
           activeCount: activeRequests.length,
+          approvedCount: approvedRequests.length,
           rejectedCount: rejectedRequests.length,
           allRequests: gp.requests,
           isLoading: gp.isLoading,
@@ -232,6 +251,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 context,
                 fullName,
                 pendingCount: pendingRequests.length,
+                approvedCount: approvedRequests.length,
                 activeCount: activeRequests.length,
                 rejectedCount: rejectedRequests.length,
               ),
@@ -247,6 +267,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     BuildContext context,
     String fullName, {
     int pendingCount = 0,
+    int approvedCount = 0,
     int activeCount = 0,
     int rejectedCount = 0,
   }) {
@@ -338,13 +359,13 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                   width: 1,
                   color: Colors.white.withValues(alpha: 0.2)),
               _buildStatItem('Active\nRequests', activeCount.toString(),
-                  () => setState(() => _selectedIndex = 2)),
+                  () => setState(() => _selectedIndex = 3)),
               Container(
                   height: 40,
                   width: 1,
                   color: Colors.white.withValues(alpha: 0.2)),
               _buildStatItem('Rejected\nRequests', rejectedCount.toString(),
-                  () => setState(() => _selectedIndex = 3)),
+                  () => setState(() => _selectedIndex = 4)),
             ],
           ),
         ],
@@ -449,12 +470,12 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 icon: Icons.verified_outlined,
                 activeIcon: Icons.verified,
                 label: 'Active Request',
-                index: 2),
+                index: 3),
             _drawerItem(
                 icon: Icons.cancel_outlined,
                 activeIcon: Icons.cancel,
                 label: 'Rejected Request',
-                index: 3),
+                index: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Divider(
@@ -464,17 +485,17 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 icon: Icons.people_outlined,
                 activeIcon: Icons.people,
                 label: 'Manage Students',
-                index: 4),
+                index: 5),
             _drawerItem(
                 icon: Icons.person_add_outlined,
                 activeIcon: Icons.person_add,
                 label: 'Add a Student',
-                index: 5),
+                index: 6),
             _drawerItem(
                 icon: Icons.upload_file_outlined,
                 activeIcon: Icons.upload_file,
                 label: 'Bulk Add',
-                index: 6),
+                index: 7),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Divider(
@@ -484,7 +505,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 icon: Icons.settings_outlined,
                 activeIcon: Icons.settings,
                 label: 'Settings',
-                index: 7),
+                index: 8),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -563,8 +584,9 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
   Widget _buildHomePage({
     required int pendingCount,
     required int activeCount,
+    required int approvedCount,
     required int rejectedCount,
-    required List allRequests,
+    required List<GatePassModel> allRequests,
     required bool isLoading,
   }) {
     if (isLoading) {
@@ -648,7 +670,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                     iconBgColor:
                         AppConstants.primaryColor.withValues(alpha: 0.1),
                     iconColor: AppConstants.primaryColor,
-                    onTap: () => setState(() => _selectedIndex = 5),
+                    onTap: () => setState(() => _selectedIndex = 6),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -659,7 +681,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                     icon: Icons.upload_file_outlined,
                     iconBgColor: Colors.teal.withValues(alpha: 0.1),
                     iconColor: Colors.teal,
-                    onTap: () => setState(() => _selectedIndex = 6),
+                    onTap: () => setState(() => _selectedIndex = 7),
                   ),
                 ),
               ],
@@ -674,18 +696,18 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                     icon: Icons.people_outlined,
                     iconBgColor: Colors.purple.withValues(alpha: 0.1),
                     iconColor: Colors.purple,
-                    onTap: () => setState(() => _selectedIndex = 4),
+                    onTap: () => setState(() => _selectedIndex = 5),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildSelectionCard(
-                    title: 'Pending',
-                    subtitle: 'Review requests',
-                    icon: Icons.pending_actions,
-                    iconBgColor: Colors.orange.withValues(alpha: 0.1),
-                    iconColor: Colors.orange,
-                    onTap: () => setState(() => _selectedIndex = 1),
+                    title: 'Approved',
+                    subtitle: 'Active + Expired',
+                    icon: Icons.verified_user_outlined,
+                    iconBgColor: Colors.green.withValues(alpha: 0.1),
+                    iconColor: Colors.green,
+                    onTap: () => setState(() => _selectedIndex = 2),
                   ),
                 ),
               ],
@@ -885,19 +907,11 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
   }
 
   void _showPassDetail(BuildContext context, dynamic r) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(8),
-        child: RequestCard(
-          request: r,
-          isAdvisor: true,
-          onActionComplete: _loadData,
-        ),
-      ),
+    RequestCard.showDetailSheet(
+      context, 
+      r, 
+      isAdvisor: true,
+      onActionComplete: _loadData,
     );
   }
 

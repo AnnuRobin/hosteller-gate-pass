@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/hod_management_service.dart';
 import '../../utils/constants.dart';
+import '../admin/user_details_page.dart';
 import 'add_faculty_screen.dart';
 
 /// Screen for HOD to view, and manage all faculty (advisors) in their department.
@@ -142,24 +143,6 @@ class _ManageFacultyScreenState extends State<ManageFacultyScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-            tooltip: 'Add Faculty',
-            onPressed: () async {
-              final created = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AddFacultyScreen(
-                    departmentId: widget.departmentId,
-                    departmentName: widget.departmentName,
-                  ),
-                ),
-              );
-              if (created == true) _loadFaculty();
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -315,9 +298,19 @@ class _ManageFacultyScreenState extends State<ManageFacultyScreen> {
         ? faculty.fullName[0].toUpperCase()
         : '?';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UserDetailsPage(user: faculty),
+          ),
+        );
+        if (result == true) _loadFaculty();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -396,6 +389,7 @@ class _ManageFacultyScreenState extends State<ManageFacultyScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

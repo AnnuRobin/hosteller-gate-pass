@@ -255,7 +255,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
                 activeCount: activeRequests.length,
                 rejectedCount: rejectedRequests.length,
               ),
-            Expanded(child: body),
+            Expanded(child: SafeArea(child: body)),
           ],
         ),
       ),
@@ -287,43 +287,43 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
-                ),
-              ),
               Row(
                 children: [
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none,
-                            color: Colors.white),
-                        onPressed: () => setState(() => _selectedIndex = 1),
-                      ),
-                      if (hasPending)
-                        Positioned(
-                          right: 10,
-                          top: 10,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                                color: Color(0xFFEF4444),
-                                shape: BoxShape.circle),
-                          ),
-                        ),
-                    ],
-                  ),
                   Builder(
                     builder: (ctx) => IconButton(
                       icon: const Icon(Icons.menu, color: Colors.white),
                       onPressed: () => Scaffold.of(ctx).openDrawer(),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none,
+                        color: Colors.white),
+                    onPressed: () => setState(() => _selectedIndex = 1),
+                  ),
+                  if (hasPending)
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle),
+                      ),
+                    ),
                 ],
               ),
             ],

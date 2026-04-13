@@ -160,9 +160,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             else
               _buildSecondaryTopBar(context, isMobile),
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildMainContent(isMobile),
+              child: SafeArea(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildMainContent(isMobile),
+              ),
             ),
           ],
         ),
@@ -196,20 +198,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  _getFormattedDate().split('\n')[0],
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14),
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.home, color: Colors.white),
+                    onPressed: () => setState(() => _selectedIndex = 0),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      DateFormat('EEEE, dd MMM yyyy').format(DateTime.now()),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Builder(
-                builder: (ctx) => IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: () => setState(() => _selectedIndex = 6),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    onPressed: () async {
+                      await authProvider.signOut();
+                    },
+                  ),
+                ],
               ),
             ],
           ),

@@ -190,7 +190,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Check-in recorded successfully.')),
+        const SnackBar(content: Text('Check-in successful')),
       );
     } catch (e) {
       if (mounted) {
@@ -267,7 +267,7 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
                         pw.Text(
                           '${req.hostelName ?? ""} | ${req.className ?? ""}',
                           style: pw.TextStyle(
-                            color: PdfColor.fromHex('#064E3B'),
+                            color: PdfColor.fromHex('#064E3B'),gir
                             fontSize: 10,
                           ),
                         ),

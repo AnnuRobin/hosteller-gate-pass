@@ -43,8 +43,13 @@ class _WardenDashboardState extends State<WardenDashboard> {
   }
 
   // ─────────────────── EXPIRED LOGIC ────────────────────────────────────────
-  bool _isExpired(dynamic r) =>
-      r.fromDate.isBefore(DateTime.now()) && r.wardenStatus != 'rejected';
+  bool _isExpired(dynamic r) {
+    if (r.wardenStatus == 'rejected') return false;
+    final now = DateTime.now();
+    final currentDateOnly = DateTime(now.year, now.month, now.day);
+    final fromDateOnly = DateTime(r.fromDate.year, r.fromDate.month, r.fromDate.day);
+    return fromDateOnly.isBefore(currentDateOnly);
+  }
 
   // ─────────────────── STATUS HELPERS ───────────────────────────────────────
   Color _statusColor(dynamic r) {
@@ -96,15 +101,58 @@ class _WardenDashboardState extends State<WardenDashboard> {
     final authProvider = Provider.of<AuthProvider>(context);
     final wardenProvider = Provider.of<WardenProvider>(context);
 
-    final pendingRequests = wardenProvider.pendingWardenRequests;
-    final activePassess = wardenProvider.activePassess;
-    final rejectedRequests = wardenProvider.rejectedRequests;
     final fullName = authProvider.userProfile?.fullName ?? 'Warden';
     final initials = fullName.isNotEmpty ? fullName[0].toUpperCase() : 'W';
+
+    final pendingRequests = wardenProvider.pendingWardenRequests
+        .where((r) => !_isExpired(r))
+        .toList();
+    final approvedPasses = wardenProvider.requests
+        .where((r) => r.wardenStatus == 'approved')
+        .toList();
+    approvedPasses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    final Set<String> _seenStudents = {};
+    final List<dynamic> studentList = [];
+    for (var r in wardenProvider.requests) {
+      if (r.studentId != null && !_seenStudents.contains(r.studentId)) {
+        _seenStudents.add(r.studentId!);
+        studentList.add(r);
+      }
+    }
+
+    final activePassess = wardenProvider.requests
+        .where((r) => r.wardenStatus == 'approved' && !_isExpired(r))
+        .toList();
+    final rejectedRequests = wardenProvider.rejectedRequests;
+    final activeCount = activePassess.length;
 
     Widget body;
     switch (_selectedIndex) {
       case 1:
+        body = _WardenListPage(
+          title: 'Approval History',
+          requests: approvedPasses,
+          type: 'history',
+          icon: Icons.history,
+          isLoading: wardenProvider.isLoading,
+          onRefresh: _loadData,
+          isExpiredFn: _isExpired,
+          statusColorFn: _statusColor,
+          statusLabelFn: _statusLabel,
+          cardBgFn: _cardBg,
+          cardBorderFn: _cardBorder,
+        );
+        break;
+      case 2:
+        body = _WardenStudentsListPage(
+          title: 'Enrolled Students',
+          students: studentList,
+          isLoading: wardenProvider.isLoading,
+          onRefresh: _loadData,
+        );
+        break;
+      case 3:
         body = _WardenListPage(
           title: 'Pending Passes',
           requests: pendingRequests,
@@ -119,7 +167,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
           cardBorderFn: _cardBorder,
         );
         break;
-      case 2:
+      case 4:
         body = _WardenListPage(
           title: 'Active Passes',
           requests: activePassess,
@@ -134,7 +182,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
           cardBorderFn: _cardBorder,
         );
         break;
-      case 3:
+      case 5:
         body = _WardenListPage(
           title: 'Rejected Passes',
           requests: rejectedRequests,
@@ -149,29 +197,23 @@ class _WardenDashboardState extends State<WardenDashboard> {
           cardBorderFn: _cardBorder,
         );
         break;
-      case 4:
+      case 6:
         body = const CommonSettingsScreen();
         break;
       default:
         body = _buildHomePage(
-          pendingCount: pendingRequests.length,
-          activeCount: activePassess.length,
-          rejectedCount: rejectedRequests.length,
           isLoading: wardenProvider.isLoading,
         );
     }
 
     return PopScope(
-      // Allow natural pop (exits app) only when on Home; otherwise go to Home.
       canPop: _selectedIndex == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        // On a sub-section â€” go back to Home
         setState(() => _selectedIndex = 0);
       },
       child: Scaffold(
         backgroundColor: Colors.grey[50],
-        drawer: _buildDrawer(context, authProvider, fullName, initials),
         body: Column(
           children: [
             _buildHeader(
@@ -179,8 +221,9 @@ class _WardenDashboardState extends State<WardenDashboard> {
               fullName,
               initials,
               pendingCount: pendingRequests.length,
-              activeCount: activePassess.length,
+              activeCount: activeCount,
               rejectedCount: rejectedRequests.length,
+              authProvider: authProvider,
             ),
             Expanded(child: body),
           ],
@@ -189,17 +232,17 @@ class _WardenDashboardState extends State<WardenDashboard> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TOP HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────── TOP HEADER ──────────────────────────────────────────
 
   Widget _buildHeader(
     BuildContext context,
     String fullName,
     String initials, {
-    int pendingCount = 0,
-    int activeCount = 0,
-    int rejectedCount = 0,
+    required int pendingCount,
+    required int activeCount,
+    required int rejectedCount,
+    required AuthProvider authProvider,
   }) {
-    final hasPending = pendingCount > 0;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -234,39 +277,19 @@ class _WardenDashboardState extends State<WardenDashboard> {
               ),
               Row(
                 children: [
-                  // Notification bell with red dot
-                  GestureDetector(
-                    onTap: () => setState(() => _selectedIndex = 1),
-                    child: Stack(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none,
-                              color: Colors.white),
-                          onPressed: () =>
-                              setState(() => _selectedIndex = 1),
-                        ),
-                        if (hasPending)
-                          Positioned(
-                            right: 10,
-                            top: 10,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFEF4444),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.home, color: Colors.white),
+                    onPressed: () => setState(() => _selectedIndex = 0),
                   ),
-                  // Hamburger to open drawer
-                  Builder(
-                    builder: (ctx) => IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: () => setState(() => _selectedIndex = 6),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    onPressed: () async {
+                      await authProvider.signOut();
+                    },
                   ),
                 ],
               ),
@@ -298,29 +321,20 @@ class _WardenDashboardState extends State<WardenDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem(
-                'Pending\nPasses',
-                pendingCount.toString(),
-                () => setState(() => _selectedIndex = 1),
-              ),
+              _buildStatItem('Pending\nPasses', pendingCount.toString(),
+                  () => setState(() => _selectedIndex = 3)),
               Container(
                   height: 40,
                   width: 1,
                   color: Colors.white.withValues(alpha: 0.2)),
-              _buildStatItem(
-                'Active\nPasses',
-                activeCount.toString(),
-                () => setState(() => _selectedIndex = 2),
-              ),
+              _buildStatItem('Active\nPasses', activeCount.toString(),
+                  () => setState(() => _selectedIndex = 4)),
               Container(
                   height: 40,
                   width: 1,
                   color: Colors.white.withValues(alpha: 0.2)),
-              _buildStatItem(
-                'Rejected\nPasses',
-                rejectedCount.toString(),
-                () => setState(() => _selectedIndex = 3),
-              ),
+              _buildStatItem('Rejected\nPasses', rejectedCount.toString(),
+                  () => setState(() => _selectedIndex = 5)),
             ],
           ),
         ],
@@ -360,187 +374,9 @@ class _WardenDashboardState extends State<WardenDashboard> {
     );
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ DRAWER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  Widget _buildDrawer(BuildContext context, AuthProvider authProvider,
-      String fullName, String initials) {
-    return Drawer(
-      child: Container(
-        color: AppConstants.primaryColor,
-        child: Column(
-          children: [
-            // Drawer header â€” content unchanged
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 28),
-              color: AppConstants.primaryColor,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white.withValues(alpha: 0.25),
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    fullName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Warden',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                  ),
-                  if (authProvider.userProfile?.hostelName != null &&
-                      authProvider.userProfile!.hostelName!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      authProvider.userProfile!.hostelName!,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Nav items â€” content unchanged
-            _drawerItem(
-              icon: Icons.home_outlined,
-              activeIcon: Icons.home,
-              label: 'Home',
-              index: 0,
-            ),
-            _drawerItem(
-              icon: Icons.pending_actions_outlined,
-              activeIcon: Icons.pending_actions,
-              label: 'Pending Passes',
-              index: 1,
-            ),
-            _drawerItem(
-              icon: Icons.verified_outlined,
-              activeIcon: Icons.verified,
-              label: 'Active Passes',
-              index: 2,
-            ),
-            _drawerItem(
-              icon: Icons.cancel_outlined,
-              activeIcon: Icons.cancel,
-              label: 'Rejected Passes',
-              index: 3,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(height: 24, color: Colors.white.withValues(alpha: 0.15)),
-            ),
-            _drawerItem(
-              icon: Icons.settings_outlined,
-              activeIcon: Icons.settings,
-              label: 'Settings',
-              index: 4,
-            ),
-            const Spacer(),
-            // Logout â€” content unchanged
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child:
-                      const Icon(Icons.logout, color: Colors.white70, size: 20),
-                ),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                      color: Colors.white70, fontWeight: FontWeight.w600),
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await authProvider.signOut();
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _drawerItem({
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required int index,
-  }) {
-    final isSelected = _selectedIndex == index;
-    return Padding(
-      padding: const EdgeInsets.only(right: 20, bottom: 4),
-      child: ListTile(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(30),
-            bottomRight: Radius.circular(30),
-          ),
-        ),
-        tileColor: isSelected
-            ? Colors.white.withValues(alpha: 0.15)
-            : Colors.transparent,
-        leading: Icon(
-          isSelected ? activeIcon : icon,
-          color: isSelected ? const Color(0xFF8DE8C4) : Colors.white70,
-          size: 22,
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-            fontSize: 15,
-            letterSpacing: 0.3,
-          ),
-        ),
-        onTap: () {
-          setState(() => _selectedIndex = index);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ HOME PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────── HOME PAGE ──────────────────────────────────────────
 
   Widget _buildHomePage({
-    required int pendingCount,
-    required int activeCount,
-    required int rejectedCount,
     required bool isLoading,
   }) {
     if (isLoading) {
@@ -555,49 +391,23 @@ class _WardenDashboardState extends State<WardenDashboard> {
             children: [
               Expanded(
                 child: _buildSelectionCard(
-                  title: 'Pending',
-                  subtitle: 'Passes to approve',
-                  icon: Icons.pending_actions,
-                  iconBgColor: Colors.orange.withValues(alpha: 0.1),
-                  iconColor: Colors.orange,
+                  title: 'Passes',
+                  subtitle: 'Approval History',
+                  icon: Icons.history,
+                  iconBgColor: AppConstants.primaryColor.withValues(alpha: 0.1),
+                  iconColor: AppConstants.primaryColor,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSelectionCard(
-                  title: 'Active',
-                  subtitle: 'Currently active',
-                  icon: Icons.verified_outlined,
-                  iconBgColor: Colors.teal.withValues(alpha: 0.1),
-                  iconColor: Colors.teal,
+                  title: 'Students',
+                  subtitle: 'Enrolled List',
+                  icon: Icons.people_outline,
+                  iconBgColor: Colors.purple.withValues(alpha: 0.1),
+                  iconColor: Colors.purple,
                   onTap: () => setState(() => _selectedIndex = 2),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSelectionCard(
-                  title: 'Rejected',
-                  subtitle: 'Rejected passes',
-                  icon: Icons.cancel_outlined,
-                  iconBgColor: AppConstants.rejectedColor.withValues(alpha: 0.1),
-                  iconColor: AppConstants.rejectedColor,
-                  onTap: () => setState(() => _selectedIndex = 3),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSelectionCard(
-                  title: 'Settings',
-                  subtitle: 'Manage preferences',
-                  icon: Icons.settings_outlined,
-                  iconBgColor: AppConstants.primaryColor.withValues(alpha: 0.1),
-                  iconColor: AppConstants.primaryColor,
-                  onTap: () => setState(() => _selectedIndex = 4),
                 ),
               ),
             ],
@@ -943,3 +753,201 @@ class _WardenListPageState extends State<_WardenListPage> {
   }
 }
 
+class _WardenStudentsListPage extends StatefulWidget {
+  final String title;
+  final List<dynamic> students;
+  final bool isLoading;
+  final Future<void> Function() onRefresh;
+
+  const _WardenStudentsListPage({
+    required this.title,
+    required this.students,
+    required this.isLoading,
+    required this.onRefresh,
+  });
+
+  @override
+  State<_WardenStudentsListPage> createState() => _WardenStudentsListPageState();
+}
+
+class _WardenStudentsListPageState extends State<_WardenStudentsListPage> {
+  String _search = '';
+  final TextEditingController _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filtered = _search.isEmpty
+        ? widget.students
+        : widget.students.where((s) {
+            final q = _search.toLowerCase();
+            return (s.studentName ?? '').toLowerCase().contains(q) ||
+                (s.className ?? '').toLowerCase().contains(q) ||
+                (s.departmentName ?? '').toLowerCase().contains(q);
+          }).toList();
+
+    return Column(
+      children: [
+        // Header
+        Container(
+          color: Colors.grey[50],
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstants.primaryColor,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    Icon(Icons.search, color: Colors.grey[400], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _ctrl,
+                        onChanged: (v) => setState(() => _search = v),
+                        decoration: InputDecoration(
+                          hintText: 'Search students...',
+                          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    if (_search.isNotEmpty)
+                      IconButton(
+                        icon: Icon(Icons.clear, color: Colors.grey[400], size: 18),
+                        onPressed: () {
+                          _ctrl.clear();
+                          setState(() => _search = '');
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Content
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline, size: 80, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      Text(
+                        _search.isEmpty
+                            ? 'No students found'
+                            : 'No results for "$_search"',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: widget.onRefresh,
+                  color: AppConstants.primaryColor,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final s = filtered[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: AppConstants.primaryColor.withValues(alpha: 0.1),
+                              child: Text(
+                                s.studentName?.isNotEmpty == true ? s.studentName![0].toUpperCase() : 'S',
+                                style: const TextStyle(
+                                  color: AppConstants.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    s.studentName ?? 'Student',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${s.className ?? "Class"} • ${s.departmentName ?? "Dept"}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}

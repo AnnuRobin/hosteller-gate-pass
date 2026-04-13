@@ -508,8 +508,6 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
             _buildTicketCard(req, expired),
             const SizedBox(height: 24),
             _buildGeofenceActionSection(req),
-            const SizedBox(height: 24),
-            _buildDownloadButton(),
             const SizedBox(height: 32),
           ],
         ),
@@ -797,30 +795,4 @@ class _GatePassTokenScreenState extends State<GatePassTokenScreen>
     );
   }
 
-  Widget _buildDownloadButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _isGeneratingPdf ? null : _downloadPass,
-        icon: _isGeneratingPdf
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
-            : const Icon(Icons.download_rounded),
-        label: Text(
-          _isGeneratingPdf ? 'Generating PDF...' : 'Download Gate Pass (PDF)',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF10B981),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
 }

@@ -5,6 +5,36 @@ import '../models/user_model.dart';
 class StudentManagementService {
   final SupabaseClient _supabase = SupabaseConfig.client;
 
+  // Fetch unique hostel names from the users table
+  Future<List<String>> getHostels() async {
+    try {
+      // Fetch all non-null hostel names
+      final response = await _supabase
+          .from('users')
+          .select('hostel_name')
+          .not('hostel_name', 'is', null);
+      
+      // Filter unique non-empty names in Dart
+      final hostels = (response as List)
+          .map((row) => row['hostel_name'].toString().trim())
+          .where((name) => name.isNotEmpty)
+          .toSet()
+          .toList();
+      
+      hostels.sort();
+      
+      // Fallback defaults if table is empty
+      if (hostels.isEmpty) {
+        return ['St Marys', 'St Thomas'];
+      }
+      
+      return hostels;
+    } catch (e) {
+      print('Error fetching hostels: $e');
+      return ['St Marys', 'St Thomas'];
+    }
+  }
+
   // Get all students in advisor's class
   Future<List<UserModel>> getClassStudents() async {
     final userId = _supabase.auth.currentUser?.id;
@@ -55,63 +85,57 @@ class StudentManagementService {
     print('  Name: $fullName');
     print('  Phone: $phone');
 
-    final currentUserId = _supabase.auth.currentUser?.id;
-    if (currentUserId == null) {
-      throw Exception('Not authenticated');
-    }
-
-    final advisorData = await _supabase
-        .from('users')
-        .select('department_id, class_id')
-        .eq('id', currentUserId)
-        .single();
-
-    final advisorDepartmentId = advisorData['department_id'] as String?;
-    final advisorClassId = advisorData['class_id'] as String?;
-
-    if (advisorDepartmentId == null || advisorClassId == null) {
-      throw Exception('Advisor must be assigned to a department and a class');
-    }
-
-    final effectiveDepartmentId = advisorDepartmentId;
-    final effectiveClassId = advisorClassId;
-
-    print('  DeptID: $effectiveDepartmentId');
-    print('  ClassID: $effectiveClassId');
-
     // Convert semester from String (S1, S2, etc.) to int (1, 2, etc.)
     int? semesterNumber;
     if (semester != null && semester.isNotEmpty) {
       semesterNumber = int.tryParse(semester.replaceFirst('S', ''));
     }
 
+    // Get current advisor info (still useful for context, but IDs are passed to the function)
+    final currentUserId = _supabase.auth.currentUser?.id;
+    if (currentUserId == null) throw Exception('Not authenticated');
+
+    final advisorData = await _supabase
+        .from('users')
+        .select('department_id, class_id')
+        .eq('id', currentUserId)
+        .single();
+    
+    final effectiveDepartmentId = advisorData['department_id'] as String;
+    final effectiveClassId = advisorData['class_id'] as String;
+
     try {
-      // Call the database function
-      final response = await _supabase.rpc('create_student_user', params: {
-        'p_email': email,
-        'p_password': password,
-        'p_full_name': fullName,
-        'p_phone': phone,
-        'p_department_id': effectiveDepartmentId,
-        'p_class_id': effectiveClassId,
-        'p_hostel_name': hostelName,
-        'p_room_no': roomNo,
-        'p_semester': semesterNumber,
-        'p_section': section,
-        'p_home_address': homeAddress,
-        'p_parent_phone': parentPhone,
-      });
+      print('🚀 Invoking Edge Function: create-student');
+      
+      final response = await _supabase.functions.invoke(
+        'create-student',
+        body: {
+          'email': email.trim().toLowerCase(),
+          'password': password,
+          'fullName': fullName.trim(),
+          'phone': phone,
+          'hostelName': hostelName,
+          'roomNo': roomNo,
+          'semester': semesterNumber,
+          'section': section,
+          'homeAddress': homeAddress,
+          'parentPhone': parentPhone,
+          'departmentId': effectiveDepartmentId,
+          'class_id': effectiveClassId,
+        },
+      );
 
-      print('✅ Function response: $response');
-
-      // Check if response indicates success
-      if (response != null && response is Map) {
-        if (response['success'] == false) {
-          throw Exception(response['message'] ?? 'Failed to create student');
-        }
+      print('✅ Function response received: ${response.status}');
+      print('📊 Response data: ${response.data}');
+      
+      final data = response.data;
+      if (data == null || (data is Map && data['success'] != true)) {
+        final errorMsg = data?['message'] ?? 'Unknown error from Edge Function';
+        print('❌ FAILED: $errorMsg');
+        throw Exception(errorMsg);
       }
 
-      print('✅ Student created successfully!');
+      print('✅ Student created successfully via Edge Function!');
     } catch (e) {
       print('❌ Error in addStudent: $e');
 

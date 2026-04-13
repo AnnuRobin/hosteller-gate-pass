@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/student_management_service.dart';
@@ -6,8 +7,9 @@ import '../../utils/constants.dart';
 
 class AddStudentScreen extends StatefulWidget {
   final VoidCallback? onStudentCreated;
+  final VoidCallback? onBack;
 
-  const AddStudentScreen({Key? key, this.onStudentCreated}) : super(key: key);
+  const AddStudentScreen({Key? key, this.onStudentCreated, this.onBack}) : super(key: key);
 
   @override
   State<AddStudentScreen> createState() => _AddStudentScreenState();
@@ -21,14 +23,41 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _hostelNameController = TextEditingController();
   final _roomNoController = TextEditingController();
   final _homeAddressController = TextEditingController();
   final _parentPhoneController = TextEditingController();
 
   String? _selectedSemester;
   String? _selectedSection;
+  String? _selectedHostel;
   bool _isSubmitting = false;
+  bool _isLoadingHostels = true;
+
+  List<String> _hostels = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHostels();
+  }
+
+  Future<void> _loadHostels() async {
+    try {
+      final hostels = await _service.getHostels();
+      if (mounted) {
+        setState(() {
+          _hostels = hostels;
+          _isLoadingHostels = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingHostels = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +69,10 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: AppConstants.primaryColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: widget.onBack ?? () => Navigator.of(context).maybePop(),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -140,38 +173,66 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                       ),
                       const SizedBox(height: 16),
                       _buildInputField(
-                        controller: _phoneController,
-                        label: 'Phone Number',
-                        hintText: '0123456789',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
+                        controller: _passwordController,
+                        label: 'Initial Password',
+                        hintText: 'Enter student password',
+                        icon: Icons.lock,
+                        obscureText: true,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter phone number';
+                            return 'Please enter a password';
                           }
-                          final trimmed = value.trim();
-                          if (!RegExp(r'^\d{10}$').hasMatch(trimmed)) {
-                            return 'Phone number must be 10 digits';
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       _buildInputField(
-                        controller: _passwordController,
-                        label: 'Initial Password',
-                        hintText: 'student123',
-                        icon: Icons.lock,
-                        obscureText: true,
-                        helperText: 'Leave empty for default password',
+                        controller: _phoneController,
+                        label: 'Phone Number',
+                        hintText: '0123456789',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 10,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter phone number';
+                          }
+                          final trimmed = value.trim();
+                          if (trimmed.length != 10) {
+                            return 'Phone number must be 10 digits';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
-                      _buildInputField(
-                        controller: _hostelNameController,
-                        label: 'Hostel Name',
-                        hintText: 'Hostel A',
-                        icon: Icons.domain,
-                      ),
+                      _isLoadingHostels
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : _buildDropdownField(
+                              label: 'Hostel Name',
+                              value: _selectedHostel,
+                              items: _hostels,
+                              icon: Icons.domain,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedHostel = value;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a hostel';
+                                }
+                                return null;
+                              },
+                            ),
                       const SizedBox(height: 16),
                       _buildInputField(
                         controller: _roomNoController,
@@ -235,12 +296,14 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                         hintText: '0123456789',
                         icon: Icons.phone_in_talk,
                         keyboardType: TextInputType.phone,
+                        maxLength: 10,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter parent phone number';
                           }
                           final trimmed = value.trim();
-                          if (!RegExp(r'^\d{10}$').hasMatch(trimmed)) {
+                          if (trimmed.length != 10) {
                             return 'Phone number must be 10 digits';
                           }
                           return null;
@@ -329,21 +392,29 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
+    bool enabled = true,
     String? helperText,
+    Widget? suffixIcon,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      enabled: enabled,
       validator: validator,
+      maxLength: maxLength,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
         helperText: helperText,
         prefixIcon: Icon(icon, color: AppConstants.primaryColor),
+        suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFF8FAFF),
+        fillColor: enabled ? const Color(0xFFF8FAFF) : Colors.grey[200],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -356,6 +427,10 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
           borderRadius: BorderRadius.all(Radius.circular(14)),
           borderSide: BorderSide(color: AppConstants.primaryColor),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
       ),
     );
   }
@@ -365,16 +440,14 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       return;
     }
 
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     setState(() {
       _isSubmitting = true;
     });
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final password = _passwordController.text.isEmpty
-          ? 'student123'
-          : _passwordController.text;
+      final password = _passwordController.text.trim();
 
       await _service.addStudent(
         fullName: _nameController.text,
@@ -383,9 +456,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         password: password,
         departmentId: authProvider.userProfile!.departmentId!,
         classId: authProvider.userProfile!.classId!,
-        hostelName: _hostelNameController.text.trim().isEmpty
-            ? null
-            : _hostelNameController.text.trim(),
+        hostelName: _selectedHostel,
         roomNo: _roomNoController.text.trim().isEmpty
             ? null
             : _roomNoController.text.trim(),
@@ -423,10 +494,10 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _hostelNameController.dispose();
     _roomNoController.dispose();
     _homeAddressController.dispose();
     _parentPhoneController.dispose();
+
     super.dispose();
   }
 }

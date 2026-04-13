@@ -5,7 +5,8 @@ import '../../utils/constants.dart';
 import 'edit_student_screen.dart';
 
 class ManageStudentsScreen extends StatefulWidget {
-  const ManageStudentsScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+  const ManageStudentsScreen({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<ManageStudentsScreen> createState() => _ManageStudentsScreenState();
@@ -254,6 +255,17 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
       ),
       child: Row(
         children: [
+          if (widget.onBack != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new,
+                    color: AppConstants.primaryColor, size: 22),
+                onPressed: widget.onBack,
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+            ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

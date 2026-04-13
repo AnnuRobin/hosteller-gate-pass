@@ -8,7 +8,8 @@ import '../../services/student_management_service.dart';
 import '../../utils/constants.dart';
 
 class BulkUploadStudentsScreen extends StatefulWidget {
-  const BulkUploadStudentsScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+  const BulkUploadStudentsScreen({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<BulkUploadStudentsScreen> createState() =>
@@ -23,36 +24,51 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(0, 12, 0, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Bulk Upload Students',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E3A8A),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('Bulk Upload'),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: AppConstants.primaryColor,
+        leading: widget.onBack != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: widget.onBack,
+              )
+            : null,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Student Bulk Upload',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Upload multiple students from CSV file',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    Text(
+                      'Upload multiple students from CSV file',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // Instructions Card
             Card(
@@ -80,7 +96,14 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                     const SizedBox(height: 8),
                     const Text('1. Full Name (required)'),
                     const Text('2. Email (required)'),
-                    const Text('3. Phone Number (required)'),
+                    const Text('3. Initial Password (optional)'),
+                    const Text('4. Phone Number (required)'),
+                    const Text('5. Hostel Name'),
+                    const Text('6. Room Number'),
+                    const Text('7. Semester (e.g. S1)'),
+                    const Text('8. Section'),
+                    const Text('9. Home Address'),
+                    const Text('10. Parent Phone Number'),
                     const SizedBox(height: 12),
                     const Text(
                       'Example:',
@@ -91,15 +114,14 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                       margin: const EdgeInsets.only(top: 8),
                       color: Colors.white,
                       child: const Text(
-                        'John Doe,john@student.edu,9876543210\n'
-                        'Jane Smith,jane@student.edu,9876543211',
-                        style: TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        'John Doe,john@student.edu,pass123,9876543210,St Thomas,101,S1,A,Address,9605...',
+                        style: TextStyle(fontFamily: 'monospace', fontSize: 10),
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      '⚠️ Default password will be "student123" for all students',
-                      style: TextStyle(color: Colors.orange),
+                      '⚠️ Default password: "student123" if column 3 is empty',
+                      style: TextStyle(color: Colors.orange, fontSize: 12),
                     ),
                   ],
                 ),
@@ -128,15 +150,15 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.description, color: Colors.green),
                   title: Text(_fileName!),
-                  subtitle: Text('${_csvData?.length ?? 0} students found'),
+                  subtitle: Text(_getRowCountMessage()),
                 ),
               ),
             ],
 
-            if (_csvData != null && _csvData!.isNotEmpty) ...[
+            if (_csvData != null && _csvData!.isNotEmpty && _hasDataRows()) ...[
               const SizedBox(height: 24),
               const Text(
-                'Preview:',
+                'Preview (Data Rows):',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -149,24 +171,35 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                     DataColumn(label: Text('Name')),
                     DataColumn(label: Text('Email')),
                     DataColumn(label: Text('Phone')),
+                    DataColumn(label: Text('Hostel')),
+                    DataColumn(label: Text('Room')),
+                    DataColumn(label: Text('Sem')),
+                    DataColumn(label: Text('Sec')),
                   ],
-                  rows: _csvData!.take(5).map((row) {
+                  rows: _csvData!
+                      .skip(_getHeaderRowsCount())
+                      .take(5)
+                      .map((row) {
                     return DataRow(
                       cells: [
-                        DataCell(Text(row[0].toString())),
-                        DataCell(Text(row[1].toString())),
-                        DataCell(Text(row[2].toString())),
+                        DataCell(Text(_getCol(row, 0))),
+                        DataCell(Text(_getCol(row, 1))),
+                        DataCell(Text(_getCol(row, 3))),
+                        DataCell(Text(_getCol(row, 4))),
+                        DataCell(Text(_getCol(row, 5))),
+                        DataCell(Text(_getCol(row, 6))),
+                        DataCell(Text(_getCol(row, 7))),
                       ],
                     );
                   }).toList(),
                 ),
               ),
 
-              if (_csvData!.length > 5)
+              if (_getDataRowsCount() > 5)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    '...and ${_csvData!.length - 5} more students',
+                    '...and ${_getDataRowsCount() - 5} more students',
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ),
@@ -185,16 +218,60 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
                   child: _isUploading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          'Upload ${_csvData!.length} Students',
+                          'Upload ${_getDataRowsCount()} Students',
                           style: const TextStyle(fontSize: 16),
                         ),
+                ),
+              ),
+            ] else if (_csvData != null && _csvData!.isNotEmpty && !_hasDataRows()) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No students found in CSV (only header or empty)',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
           ],
         ),
       ),
-    );
+    ));
+  }
+
+  String _getCol(List<dynamic> row, int index) {
+    if (index >= row.length) return '';
+    return row[index]?.toString() ?? '';
+  }
+
+  int _getHeaderRowsCount() {
+    if (_csvData == null || _csvData!.isEmpty) return 0;
+    // Common header labels check
+    final firstCol = _csvData!.first[0].toString().toLowerCase();
+    final secondCol = _csvData![0].length > 1 ? _csvData![0][1].toString().toLowerCase() : '';
+    if (firstCol.contains('name') || secondCol.contains('email')) {
+      return 1;
+    }
+    return 0;
+  }
+
+  int _getDataRowsCount() {
+    if (_csvData == null) return 0;
+    int count = _csvData!.length - _getHeaderRowsCount();
+    return count > 0 ? count : 0;
+  }
+
+  bool _hasDataRows() {
+    return _getDataRowsCount() > 0;
+  }
+
+  String _getRowCountMessage() {
+    final count = _getDataRowsCount();
+    if (count == 0 && _csvData != null && _csvData!.isNotEmpty) {
+      return 'No data rows found';
+    }
+    return '$count rows found';
   }
 
   Future<void> _pickFile() async {
@@ -210,6 +287,16 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
           final csvString = utf8.decode(bytes);
           final List<List<dynamic>> csvData =
               const CsvToListConverter().convert(csvString);
+
+          if (csvData.isNotEmpty && csvData.first.length < 4) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid CSV: Need at least Name, Email, Password, and Phone columns.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
 
           setState(() {
             _csvData = csvData;
@@ -236,22 +323,52 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
       int successCount = 0;
       int failCount = 0;
 
-      for (var row in _csvData!) {
+      // Skip header row if matches common header names
+      int startIndex = 0;
+      if (_csvData!.isNotEmpty && 
+          (_csvData!.first[0].toString().toLowerCase().contains('name') ||
+           _csvData!.first[1].toString().toLowerCase().contains('email'))) {
+        startIndex = 1;
+      }
+
+      for (int i = startIndex; i < _csvData!.length; i++) {
+        final row = _csvData![i];
         try {
-          if (row.length >= 3) {
+          if (row.length >= 4) {
+            final fullName = row[0].toString().trim();
+            final email = row[1].toString().trim();
+            final password = row[2].toString().trim().isEmpty ? 'student123' : row[2].toString().trim();
+            final phone = row[3].toString().trim();
+            
+            // Optional fields
+            final hostelName = row.length > 4 ? row[4].toString().trim() : null;
+            final roomNo = row.length > 5 ? row[5].toString().trim() : null;
+            final semester = row.length > 6 ? row[6].toString().trim() : null;
+            final section = row.length > 7 ? row[7].toString().trim() : null;
+            final homeAddress = row.length > 8 ? row[8].toString().trim() : null;
+            final parentPhone = row.length > 9 ? row[9].toString().trim() : null;
+
+            if (fullName.isEmpty || email.isEmpty) continue;
+
             await _service.addStudent(
-              fullName: row[0].toString(),
-              email: row[1].toString(),
-              phone: row[2].toString(),
-              password: 'student123',
+              fullName: fullName,
+              email: email,
+              phone: phone,
+              password: password,
               departmentId: authProvider.userProfile!.departmentId!,
               classId: authProvider.userProfile!.classId!,
+              hostelName: hostelName,
+              roomNo: roomNo,
+              semester: semester,
+              section: section,
+              homeAddress: homeAddress,
+              parentPhone: parentPhone,
             );
             successCount++;
           }
         } catch (e) {
           failCount++;
-          print('Failed to add student: ${row[0]} - $e');
+          print('Row $i ERROR [${row.length > 0 ? row[0] : "Unknown"}]: $e');
         }
       }
 

@@ -135,6 +135,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
+          onBack: () => setState(() => _selectedIndex = 0),
         );
         break;
       case 2:
@@ -149,6 +150,7 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
+          onBack: () => setState(() => _selectedIndex = 0),
         );
         break;
       case 3:
@@ -163,18 +165,24 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
           statusLabelFn: _statusLabel,
           cardBgFn: _cardBg,
           cardBorderFn: _cardBorder,
+          onBack: () => setState(() => _selectedIndex = 0),
         );
         break;
       case 4:
-        body = const ManageStudentsScreen();
+        body = ManageStudentsScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
         break;
       case 5:
         body = AddStudentScreen(
           onStudentCreated: () => setState(() => _selectedIndex = 0),
+          onBack: () => setState(() => _selectedIndex = 0),
         );
         break;
       case 6:
-        body = const BulkUploadStudentsScreen();
+        body = BulkUploadStudentsScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
         break;
       case 7:
         body = const CommonSettingsScreen();
@@ -961,6 +969,7 @@ class _AdvisorListPage extends StatefulWidget {
   final String Function(dynamic) statusLabelFn;
   final Color Function(dynamic) cardBgFn;
   final Color Function(dynamic) cardBorderFn;
+  final VoidCallback? onBack;
 
   const _AdvisorListPage({
     required this.title,
@@ -973,6 +982,7 @@ class _AdvisorListPage extends StatefulWidget {
     required this.statusLabelFn,
     required this.cardBgFn,
     required this.cardBorderFn,
+    this.onBack,
   });
 
   @override
@@ -1014,14 +1024,28 @@ class _AdvisorListPageState extends State<_AdvisorListPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppConstants.primaryColor,
-                  fontStyle: FontStyle.italic,
-                ),
+              Row(
+                children: [
+                  if (widget.onBack != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                        onPressed: widget.onBack,
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppConstants.primaryColor,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Container(

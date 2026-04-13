@@ -24,9 +24,11 @@ class AuthService {
     );
     
     if (response.user != null) {
+      final userId = response.user!.id;
+      
       // Create user profile
       await _supabase.from('users').insert({
-        'id': response.user!.id,
+        'id': userId,
         'email': email,
         'full_name': fullName,
         'phone': phone,

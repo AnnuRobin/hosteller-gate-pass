@@ -279,14 +279,17 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
+        withData: true, // Crucial for mobile: loads file bytes into memory
       );
 
       if (result != null) {
         final bytes = result.files.first.bytes;
         if (bytes != null) {
-          final csvString = utf8.decode(bytes);
+          var csvString = utf8.decode(bytes);
+          // Normalize line endings to avoid single-row parsing issues
+          csvString = csvString.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
           final List<List<dynamic>> csvData =
-              const CsvToListConverter().convert(csvString);
+              const CsvToListConverter(eol: '\n').convert(csvString);
 
           if (csvData.isNotEmpty && csvData.first.length < 4) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -331,6 +334,7 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
         startIndex = 1;
       }
 
+      String firstError = '';
       for (int i = startIndex; i < _csvData!.length; i++) {
         final row = _csvData![i];
         try {
@@ -368,6 +372,7 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
           }
         } catch (e) {
           failCount++;
+          if (firstError.isEmpty) firstError = e.toString().replaceFirst('Exception: ', '');
           print('Row $i ERROR [${row.length > 0 ? row[0] : "Unknown"}]: $e');
         }
       }
@@ -375,14 +380,18 @@ class _BulkUploadStudentsScreenState extends State<BulkUploadStudentsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Upload complete!\n✅ Success: $successCount\n❌ Failed: $failCount',
+            'Upload complete!\n✅ Success: $successCount\n❌ Failed: $failCount\n${failCount > 0 ? 'Error: $firstError' : ''}',
           ),
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 8),
+          backgroundColor: failCount > 0 ? Colors.red : Colors.green,
         ),
       );
 
       if (successCount > 0) {
-        Navigator.pop(context);
+        setState(() {
+          _csvData = null;
+          _fileName = null;
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

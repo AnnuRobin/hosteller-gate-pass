@@ -371,129 +371,138 @@ class _AdvisorDashboardState extends State<AdvisorDashboard> {
     return Drawer(
       child: Container(
         color: AppConstants.primaryColor,
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 28),
-              color: AppConstants.primaryColor,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white.withValues(alpha: 0.25),
-                    child: Text(
-                      initials,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                color: AppConstants.primaryColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white.withValues(alpha: 0.25),
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      fullName,
                       style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Advisor',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _drawerItem(
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home,
+                          label: 'Home',
+                          index: 0),
+                      _drawerItem(
+                          icon: Icons.pending_actions_outlined,
+                          activeIcon: Icons.pending_actions,
+                          label: 'Pending Request',
+                          index: 1),
+                      _drawerItem(
+                          icon: Icons.verified_outlined,
+                          activeIcon: Icons.verified,
+                          label: 'Active Request',
+                          index: 2),
+                      _drawerItem(
+                          icon: Icons.cancel_outlined,
+                          activeIcon: Icons.cancel,
+                          label: 'Rejected Request',
+                          index: 3),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Divider(
+                            height: 24, color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      _drawerItem(
+                          icon: Icons.people_outlined,
+                          activeIcon: Icons.people,
+                          label: 'Manage Students',
+                          index: 4),
+                      _drawerItem(
+                          icon: Icons.person_add_outlined,
+                          activeIcon: Icons.person_add,
+                          label: 'Add a Student',
+                          index: 5),
+                      _drawerItem(
+                          icon: Icons.upload_file_outlined,
+                          activeIcon: Icons.upload_file,
+                          label: 'Bulk Add',
+                          index: 6),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Divider(
+                            height: 24, color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      _drawerItem(
+                          icon: Icons.settings_outlined,
+                          activeIcon: Icons.settings,
+                          label: 'Settings',
+                          index: 7),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    fullName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      'Advisor',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
+                    child:
+                        const Icon(Icons.logout, color: Colors.white70, size: 20),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            _drawerItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: 'Home',
-                index: 0),
-            _drawerItem(
-                icon: Icons.pending_actions_outlined,
-                activeIcon: Icons.pending_actions,
-                label: 'Pending Request',
-                index: 1),
-            _drawerItem(
-                icon: Icons.verified_outlined,
-                activeIcon: Icons.verified,
-                label: 'Active Request',
-                index: 2),
-            _drawerItem(
-                icon: Icons.cancel_outlined,
-                activeIcon: Icons.cancel,
-                label: 'Rejected Request',
-                index: 3),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(
-                  height: 24, color: Colors.white.withValues(alpha: 0.15)),
-            ),
-            _drawerItem(
-                icon: Icons.people_outlined,
-                activeIcon: Icons.people,
-                label: 'Manage Students',
-                index: 4),
-            _drawerItem(
-                icon: Icons.person_add_outlined,
-                activeIcon: Icons.person_add,
-                label: 'Add a Student',
-                index: 5),
-            _drawerItem(
-                icon: Icons.upload_file_outlined,
-                activeIcon: Icons.upload_file,
-                label: 'Bulk Add',
-                index: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(
-                  height: 24, color: Colors.white.withValues(alpha: 0.15)),
-            ),
-            _drawerItem(
-                icon: Icons.settings_outlined,
-                activeIcon: Icons.settings,
-                label: 'Settings',
-                index: 7),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                        color: Colors.white70, fontWeight: FontWeight.w600),
                   ),
-                  child:
-                      const Icon(Icons.logout, color: Colors.white70, size: 20),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await authProvider.signOut();
+                  },
                 ),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                      color: Colors.white70, fontWeight: FontWeight.w600),
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await authProvider.signOut();
-                },
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );

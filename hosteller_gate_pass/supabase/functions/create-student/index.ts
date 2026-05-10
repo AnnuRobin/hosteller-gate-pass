@@ -24,6 +24,8 @@ serve(async (req) => {
 
     console.log(`Creating student: ${email}`);
 
+    let userId: string | undefined;
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -31,9 +33,38 @@ serve(async (req) => {
       user_metadata: { full_name: fullName },
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      if (authError.message.includes("already been registered")) {
+        console.log(`User ${email} already in auth.users. Checking for ghost record...`);
+        // Find user by email
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+        const existingUser = listData?.users.find((u: any) => u.email === email);
+        
+        if (existingUser) {
+          userId = existingUser.id;
+          
+          // Check if they exist in public.users
+          const { data: publicUser } = await supabaseAdmin.from("users").select("id").eq("id", userId).maybeSingle();
+          if (publicUser) {
+            throw new Error("A user with this email address has already been registered");
+          }
+          
+          console.log(`Ghost record found for ${email}. Re-using auth ID ${userId}.`);
+          // Update their password and metadata to match the new CSV data
+          await supabaseAdmin.auth.admin.updateUserById(userId, {
+            password,
+            user_metadata: { full_name: fullName },
+          });
+        } else {
+          throw authError;
+        }
+      } else {
+        throw authError;
+      }
+    } else {
+      userId = authData.user?.id;
+    }
 
-    const userId = authData.user?.id;
     if (!userId) throw new Error("Auth user creation failed");
 
     const { error: dbError } = await supabaseAdmin.from("users").insert({

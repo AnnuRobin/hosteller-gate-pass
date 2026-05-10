@@ -27,12 +27,15 @@ class DepartmentService {
   // Create a new department
   Future<DepartmentModel> createDepartment({
     required String name,
-    String? description,
+    required String departmentCode,
   }) async {
     try {
       final response = await _supabase
           .from('departments')
-          .insert({'name': name})
+          .insert({
+            'name': name,
+            'department_code': departmentCode.toUpperCase(),
+          })
           .select()
           .single();
       return DepartmentModel.fromJson(response);
@@ -216,4 +219,53 @@ class DepartmentService {
       rethrow;
     }
   }
+
+  // Temporary method to seed existing department codes
+  Future<void> seedDepartmentCodes() async {
+    final Map<String, String> mappings = {
+      'Computer science': 'CS',
+      'Elctronics and Communication': 'EC',
+      'Mechanical': 'ME',
+      'artificial intelligence and Data science': 'AD',
+    };
+
+    try {
+      final departments = await getAllDepartments();
+      for (var dept in departments) {
+        if (mappings.containsKey(dept.name)) {
+          await _supabase
+              .from('departments')
+              .update({'department_code': mappings[dept.name]})
+              .eq('id', dept.id);
+          print('Updated ${dept.name} with code ${mappings[dept.name]}');
+        }
+      }
+    } catch (e) {
+      print('Error seeding department codes: $e');
+    }
+  }
+   /// Returns distinct class_id values for users assigned to [departmentId].
+  Future<List<String>> getClassesForDepartment(String departmentId) async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select('class_id')
+          .eq('department_id', departmentId)
+          .not('class_id', 'is', null);
+
+      final ids = (response as List)
+          .map((r) => r['class_id'] as String?)
+          .whereType<String>()
+          .toSet()
+          .toList()
+        ..sort();
+      return ids;
+    } catch (e) {
+      print('Error fetching classes for department: $e');
+      return [];
+    }
+  }
 }
+
+ 
+

@@ -247,8 +247,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login failed: ${e.toString()}'),
+        const SnackBar(
+          content: Text('Incorrect username or password'),
           backgroundColor: Colors.red,
         ),
       );
